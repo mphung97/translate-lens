@@ -1,0 +1,44 @@
+{
+  "name": "translate-lens-v2",
+  "version": "0.1.0",
+  "description": "",
+  "type": "module",
+  "scripts": {
+    "start": "vite",
+    "dev": "vite",
+    "build": "vite build",
+    "serve": "vite preview",
+    "tauri": "tauri"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@ai-sdk/groq": "^4.0.40",
+    "@kobalte/core": "^0.13.14",
+    "@openrouter/ai-sdk-provider": "^3.0.0",
+    "@solidjs/router": "^1.0.0",
+    "@tauri-apps/api": "^2",
+    "@tauri-apps/plugin-clipboard-manager": "~2.3.3",
+    "@tauri-apps/plugin-opener": "^2",
+    "@tauri-apps/plugin-os": "~2.3.2",
+    "ai": "^7.0.97",
+    "clsx": "^2.1.1",
+    "lucide-solid": "^1.33.0",
+    "solid-js": "^1.9.3",
+    "tailwind-merge": "^3.6.0",
+    "zod": "^4.5.4"
+  },
+  "devDependencies": {
+    "@solidjs/testing-library": "^0.8.10",
+    "@tailwindcss/vite": "^4.3.3",
+    "@tauri-apps/cli": "^2",
+    "@testing-library/jest-dom": "^7.0.1",
+    "@testing-library/user-event": "^14.6.7",
+    "@types/node": "^26.6.1",
+    "jsdom": "^30.0.1",
+    "tailwindcss": "^4.3.3",
+    "typescript": "~5.6.2",
+    "vite": "^6.0.3",
+    "vite-plugin-solid": "^2.11.0",
+    "vitest": "^4.1.11"
+  }
+}

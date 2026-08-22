@@ -1,0 +1,27 @@
+# Deps
+node_modules/
+
+# Build
+dist/
+
+# Env — never commit real keys (BYOK lives in OS keychain)
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+
+# Test coverage
+coverage/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor — keep shared extensions.json, ignore personal settings
+.vscode/*
+!.vscode/extensions.json
+
+# Vite
+*.local
