@@ -16,6 +16,12 @@ export const MAX_UPLOAD_FILES = 5;
 export const COPY_RESET_DELAY_MS = 1500;
 export const TEXTAREA_ROWS = 5;
 
+export const OCR_MAX_LONG_EDGE = 1536;
+export const OCR_JPEG_QUALITY = 0.82;
+export const OCR_SMALL_PNG_CUTOFF = 800;
+export const OCR_TINY_UPSCALE_CUTOFF = 400;
+export const OCR_JPEG_FALLBACK_BYTES = 500 * 1024;
+
 export const WINDOW_WIDTH = 500;
 export const MAX_WINDOW_HEIGHT = 700;
 

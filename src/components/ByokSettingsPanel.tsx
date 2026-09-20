@@ -11,6 +11,11 @@ import { createStore } from "solid-js/store";
 import { cn } from "@/lib/utils";
 import { setAlwaysOnTop, isAlwaysOnTop } from "@/lib/window";
 import {
+  checkForUpdate,
+  getAppVersion,
+  installAndRelaunch,
+} from "@/lib/updater";
+import {
   clearKey,
   setKey,
   type ByokProviderId,
@@ -34,6 +39,11 @@ interface ByokState {
   busy: boolean;
   status: ByokStatus;
   alwaysOnTop: boolean;
+  version: string;
+  updateBusy: boolean;
+  updateMsg: string;
+  updateAvailable: boolean;
+  latestVersion: string;
 }
 
 const IDLE: ByokStatus = IDLE_BYOK_STATUS;
@@ -49,6 +59,11 @@ export default function ByokSettingsPanel() {
     busy: false,
     status: IDLE,
     alwaysOnTop: false,
+    version: "",
+    updateBusy: false,
+    updateMsg: "",
+    updateAvailable: false,
+    latestVersion: "",
   });
 
   const dirty = () => state.apiKey !== state.savedKey;
@@ -141,9 +156,52 @@ export default function ByokSettingsPanel() {
     }
   }
 
+  async function loadVersion() {
+    try {
+      setState({ version: await getAppVersion() });
+    } catch {
+      setState({ version: "0.1.0" });
+    }
+  }
+
+  async function handleCheck() {
+    if (state.updateBusy) return;
+    setState({ updateBusy: true, updateMsg: "" });
+    try {
+      const r = await checkForUpdate();
+      if (r.available) {
+        setState({
+          updateAvailable: true,
+          latestVersion: r.version ?? "",
+          updateMsg: `Có bản mới v${r.version ?? ""}`,
+        });
+      } else {
+        setState({ updateAvailable: false, updateMsg: "Đã là bản mới nhất" });
+      }
+    } catch (e) {
+      setState({ updateMsg: String(e) });
+    } finally {
+      setState({ updateBusy: false });
+    }
+  }
+
+  async function handleInstall() {
+    if (state.updateBusy) return;
+    setState({ updateBusy: true, updateMsg: "" });
+    try {
+      const ok = await installAndRelaunch();
+      if (!ok) setState({ updateAvailable: false, updateMsg: "Đã là bản mới nhất" });
+    } catch (e) {
+      setState({ updateMsg: String(e) });
+    } finally {
+      setState({ updateBusy: false });
+    }
+  }
+
   onMount(() => {
     refreshPresence();
     loadProvider(state.provider);
+    void loadVersion();
     void isAlwaysOnTop()
       .then((v) => setState({ alwaysOnTop: v }))
       .catch(() => {});
@@ -339,6 +397,61 @@ export default function ByokSettingsPanel() {
             />
           </Switch.Control>
         </Switch>
+
+        <Separator class={cn(["h-px", "bg-main/6", "border-0"])} />
+
+        <div class={cn(["flex items-center justify-between gap-2"])}>
+          <div>
+            <span
+              class={cn([
+                "block",
+                "text-xs font-bold tracking-tight",
+                "text-main",
+                "font-mono",
+                "select-none",
+              ])}
+            >
+              Phiên bản (App version){" "}
+              <Show when={state.version}>
+                <span class={cn(["text-sub"])}>v{state.version}</span>
+              </Show>
+            </span>
+            <p class={cn(["text-[11px]", "text-ink"])}>
+              <Show when={state.updateMsg} fallback={"Kiểm tra và cài bản mới"}>
+                {state.updateMsg}
+              </Show>
+            </p>
+          </div>
+          <Button
+            onClick={() =>
+              state.updateAvailable ? void handleInstall() : void handleCheck()
+            }
+            disabled={state.updateBusy}
+            class={cn([
+              "px-3 py-1.5",
+              "rounded-lg",
+              "bg-caret hover:bg-caret/90 text-main",
+              "border-0",
+              "text-xs font-bold tracking-wide",
+              "font-mono",
+              "inline-flex items-center gap-1",
+              "transition-colors cursor-pointer",
+              "disabled:opacity-50 disabled:cursor-wait",
+            ])}
+          >
+            <Show
+              when={!state.updateBusy}
+              fallback={"Đang cài..."}
+            >
+              <Show
+                when={state.updateAvailable}
+                fallback={"Kiểm tra cập nhật"}
+              >
+                Cài đặt v{state.latestVersion}
+              </Show>
+            </Show>
+          </Button>
+        </div>
       </div>
 
       {/* Card 2: BYOK */}

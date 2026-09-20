@@ -28,6 +28,7 @@ export type TranslateResult = z.infer<typeof translateSchema>;
 interface TranslateInput {
   text?: string;
   imageData?: Uint8Array;
+  imageMediaType?: string;
   targetLanguage?: string;
   provider: ByokProviderId;
   apiKey: string;
@@ -98,6 +99,7 @@ Rules:
 export async function translate({
   text,
   imageData,
+  imageMediaType = "image/png",
   targetLanguage = DEFAULT_TARGET_LANGUAGE,
   provider,
   apiKey,
@@ -119,7 +121,7 @@ export async function translate({
         role: "user",
         content: [
           { type: "text", text: "Translate the text in this image." },
-          { type: "file", mediaType: "image/png", data: imageData },
+          { type: "image", image: imageData, mediaType: imageMediaType },
         ],
       },
     ];

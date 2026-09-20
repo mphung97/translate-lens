@@ -6,7 +6,7 @@ import { Show } from "solid-js";
 import { createStore } from "solid-js/store";
 import { useNavigate } from "@solidjs/router";
 import { fmtShortcut, MOD_KEY } from "@/lib/platform";
-import { rgbaToPng } from "@/lib/image";
+import { prepareImageForOcr } from "@/lib/image";
 import { resolveCredentials, translate, TranslateError } from "@/lib/translate";
 import { usePreferences } from "@/stores/preferences";
 import { useTranslation } from "@/stores/translation";
@@ -40,9 +40,10 @@ export default function OcrUploadPanel() {
       const { apiKey } = resolveCredentials(prefs.apiKeys(), provider);
       const image = await readImage();
       const [rgba, size] = await Promise.all([image.rgba(), image.size()]);
-      const pngData = await rgbaToPng(rgba, size.width, size.height);
+      const prepared = await prepareImageForOcr(rgba, size.width, size.height);
       const result = await translate({
-        imageData: pngData,
+        imageData: prepared.bytes,
+        imageMediaType: prepared.mediaType,
         targetLanguage: prefs.preferences().targetLanguage,
         provider,
         apiKey,

@@ -19,6 +19,8 @@
     "clipboard-manager:allow-read-image",
     "clipboard-manager:allow-write-text",
     "fs:default",
-    "os:default"
+    "os:default",
+    "process:default",
+    "updater:default"
   ]
 }
