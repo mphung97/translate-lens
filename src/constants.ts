@@ -30,6 +30,8 @@ export const MAX_WINDOW_HEIGHT = 700;
 export const FALLBACK_TRANSLATE_ERROR = "Translation failed";
 export const FALLBACK_CLIPBOARD_IMAGE_ERROR =
   "Failed to read or translate clipboard image";
+export const FALLBACK_UPLOAD_ERROR =
+  "Failed to read or translate uploaded image";
 
 export const MANUAL_INPUT_PLACEHOLDER = "Type or paste text to translate…";
 

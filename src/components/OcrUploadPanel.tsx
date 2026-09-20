@@ -6,8 +6,10 @@ import { Show } from "solid-js";
 import { createStore } from "solid-js/store";
 import { useNavigate } from "@solidjs/router";
 import { fmtShortcut, MOD_KEY } from "@/lib/platform";
-import { prepareImageForOcr } from "@/lib/image";
+import { prepareFileForOcr, prepareImageForOcr } from "@/lib/image";
+import type { PreparedImage } from "@/lib/image";
 import { resolveCredentials, translate, TranslateError } from "@/lib/translate";
+import type { TranslateResult } from "@/lib/translate";
 import { recognizeLocal } from "@/lib/localOcr";
 import { usePreferences } from "@/stores/preferences";
 import { useTranslation } from "@/stores/translation";
@@ -15,7 +17,7 @@ import { cn } from "@/lib/utils";
 import Badge from "./Badge";
 import {
   FALLBACK_CLIPBOARD_IMAGE_ERROR,
-  MAX_UPLOAD_FILES,
+  FALLBACK_UPLOAD_ERROR,
   OCR_MIN_SCORE,
   ROUTES,
 } from "@/constants";
@@ -34,63 +36,82 @@ export default function OcrUploadPanel() {
     error: "",
   });
 
-  async function handleClipboardOcr() {
+  async function runOcrTranslate(prepared: PreparedImage): Promise<{
+    result: TranslateResult;
+    ocrSource: "local" | "cloud";
+    ocrScore: number | null;
+  }> {
+    const provider = prefs.preferences().byokProvider;
+    const { apiKey } = resolveCredentials(prefs.apiKeys(), provider);
+    const targetLanguage = prefs.preferences().targetLanguage;
+
+    // Local first (awaits init when the user clicks before ready),
+    // cloud vision fallback when recognition is weak or empty.
+    try {
+      const local = await recognizeLocal(prepared.bytes, prepared.mediaType);
+      console.info("[ocr]", {
+        avgScore: local.avgScore,
+        minScore: local.minScore,
+        lineCount: local.lineCount,
+      });
+      if (local.text.trim() && local.avgScore >= OCR_MIN_SCORE) {
+        const result = await translate({
+          text: local.text,
+          targetLanguage,
+          provider,
+          apiKey,
+        });
+        return { result, ocrSource: "local", ocrScore: local.avgScore };
+      }
+    } catch {
+      // Fall through to cloud vision.
+    }
+
+    const result = await translate({
+      imageData: prepared.bytes,
+      imageMediaType: prepared.mediaType,
+      targetLanguage,
+      provider,
+      apiKey,
+    });
+    return { result, ocrSource: "cloud", ocrScore: null };
+  }
+
+  async function runAndNavigate(
+    getPrepared: () => Promise<PreparedImage>,
+    fallbackMsg: string,
+  ) {
     if (state.busy) return;
     setState({ busy: true, error: "" });
     try {
-      const provider = prefs.preferences().byokProvider;
-      const { apiKey } = resolveCredentials(prefs.apiKeys(), provider);
-      const targetLanguage = prefs.preferences().targetLanguage;
-      const image = await readImage();
-      const [rgba, size] = await Promise.all([image.rgba(), image.size()]);
-      const prepared = await prepareImageForOcr(rgba, size.width, size.height);
-
-      // Local first (awaits init when the user clicks before ready),
-      // cloud vision fallback when recognition is weak or empty.
-      let localText: string | null = null;
-      let localScore: number | null = null;
-      try {
-        const local = await recognizeLocal(prepared.bytes, prepared.mediaType);
-        console.info("[ocr]", {
-          avgScore: local.avgScore,
-          minScore: local.minScore,
-          lineCount: local.lineCount,
-        });
-        if (local.text.trim() && local.avgScore >= OCR_MIN_SCORE) {
-          localText = local.text;
-          localScore = local.avgScore;
-        }
-      } catch {
-        localText = null;
-      }
-
-      if (localText !== null) {
-        const result = await translate({
-          text: localText,
-          targetLanguage,
-          provider,
-          apiKey,
-        });
-        t.setTranslationResult(result, "upload", "local", localScore);
-      } else {
-        const result = await translate({
-          imageData: prepared.bytes,
-          imageMediaType: prepared.mediaType,
-          targetLanguage,
-          provider,
-          apiKey,
-        });
-        t.setTranslationResult(result, "upload", "cloud");
-      }
+      const prepared = await getPrepared();
+      const { result, ocrSource, ocrScore } = await runOcrTranslate(prepared);
+      t.setTranslationResult(result, "upload", ocrSource, ocrScore);
       navigate(ROUTES.result);
     } catch (e) {
       setState({
-        error:
-          e instanceof TranslateError ? e.message : FALLBACK_CLIPBOARD_IMAGE_ERROR,
+        error: e instanceof TranslateError ? e.message : fallbackMsg,
       });
     } finally {
       setState({ busy: false });
     }
+  }
+
+  function handleClipboardOcr() {
+    return runAndNavigate(async () => {
+      const image = await readImage();
+      const [rgba, size] = await Promise.all([image.rgba(), image.size()]);
+      return prepareImageForOcr(rgba, size.width, size.height);
+    }, FALLBACK_CLIPBOARD_IMAGE_ERROR);
+  }
+
+  function handleFiles(files: File[]) {
+    const file = files[0];
+    if (!file) return;
+    return runAndNavigate(
+      () => prepareFileForOcr(file),
+      FALLBACK_UPLOAD_ERROR,
+    );
   }
 
   return (
@@ -123,11 +144,23 @@ export default function OcrUploadPanel() {
           "transition-all duration-200",
           "hover:border-caret hover:bg-caret/15",
         ])}
-        multiple
-        maxFiles={MAX_UPLOAD_FILES}
+        multiple={false}
+        maxFiles={1}
+        accept="image/png,image/jpeg,image/webp,image/bmp"
         allowDragAndDrop
-        onFileAccept={(data) => console.log("accepted", data)}
-        onFileReject={(data) => console.log("rejected", data)}
+        disabled={state.busy}
+        onFileAccept={handleFiles}
+        onFileReject={(rejections) => {
+          const code = rejections[0]?.errors[0];
+          setState({
+            error:
+              code === "FILE_INVALID_TYPE"
+                ? "Chỉ hỗ trợ ảnh PNG, JPG, WEBP, BMP"
+                : code === "TOO_MANY_FILES"
+                  ? "Chỉ chọn 1 ảnh mỗi lần"
+                  : FALLBACK_UPLOAD_ERROR,
+          });
+        }}
       >
         <FileField.Dropzone
           class={cn(["flex flex-col items-center gap-3", "w-full"])}
@@ -153,7 +186,7 @@ export default function OcrUploadPanel() {
                 "m-0",
               ])}
             >
-              Kéo thả ảnh vào đây hoặc bấm để chọn tệp
+              {state.busy ? "Đang đọc ảnh…" : "Kéo thả ảnh vào đây hoặc bấm để chọn tệp"}
             </p>
             <p
               class={cn([

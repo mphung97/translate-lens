@@ -88,19 +88,15 @@ export async function rgbaToPng(
 }
 
 /**
- * Downscale / re-encode clipboard RGBA for vision OCR.
+ * Encode a decoded image canvas for vision OCR.
  * Small images stay PNG (sharp Hanzi), large images become JPEG.
  */
-export async function prepareImageForOcr(
-  rgba: Uint8Array,
-  width: number,
-  height: number,
+export async function encodeCanvas(
+  source: HTMLCanvasElement,
 ): Promise<PreparedImage> {
+  const width = source.width;
+  const height = source.height;
   if (width <= 0 || height <= 0) throw new Error("Invalid image dimensions");
-  if (rgba.byteLength < width * height * 4) {
-    throw new Error("RGBA buffer smaller than dimensions");
-  }
-  const source = rgbaToCanvas(rgba, width, height);
   const longEdge = Math.max(width, height);
 
   if (longEdge < OCR_TINY_UPSCALE_CUTOFF) {
@@ -135,4 +131,39 @@ export async function prepareImageForOcr(
     bytes: await toJpegBytes(downscaled, OCR_JPEG_QUALITY),
     mediaType: "image/jpeg",
   };
+}
+
+/**
+ * Downscale / re-encode clipboard RGBA for vision OCR.
+ * Small images stay PNG (sharp Hanzi), large images become JPEG.
+ */
+export async function prepareImageForOcr(
+  rgba: Uint8Array,
+  width: number,
+  height: number,
+): Promise<PreparedImage> {
+  if (width <= 0 || height <= 0) throw new Error("Invalid image dimensions");
+  if (rgba.byteLength < width * height * 4) {
+    throw new Error("RGBA buffer smaller than dimensions");
+  }
+  return encodeCanvas(rgbaToCanvas(rgba, width, height));
+}
+
+/**
+ * Decode an uploaded image file and prepare it for OCR.
+ * Shares the encode path with clipboard RGBA via `encodeCanvas`.
+ */
+export async function prepareFileForOcr(file: File): Promise<PreparedImage> {
+  if (!file.type.startsWith("image/")) throw new Error("Not an image file");
+  const bitmap = await createImageBitmap(file);
+  try {
+    const canvas = document.createElement("canvas");
+    canvas.width = bitmap.width;
+    canvas.height = bitmap.height;
+    const ctx = canvas.getContext("2d")!;
+    ctx.drawImage(bitmap, 0, 0);
+    return await encodeCanvas(canvas);
+  } finally {
+    bitmap.close();
+  }
 }
