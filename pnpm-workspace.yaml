@@ -1,4 +1,5 @@
 allowBuilds:
   esbuild: true
+  protobufjs: true
 minimumReleaseAgeExclude:
   - '@tauri-apps/plugin-updater@2.12.0'

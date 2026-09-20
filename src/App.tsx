@@ -8,11 +8,15 @@ import OcrUploadPanel from "@/components/OcrUploadPanel";
 import ResultPanel from "@/components/ResultPanel";
 import SettingsPanel from "@/components/ByokSettingsPanel";
 import { ROUTES } from "@/constants";
+import { readyOcr } from "@/lib/localOcr";
 
 function KeyBootstrapper(props: ParentProps) {
   const prefs = usePreferences();
   onMount(() => {
     void prefs.reloadKeys();
+    // Silent background warm-up; cached launches resolve in <1s.
+    // Failures stay silent here — OCR clicks and Splash retry instead.
+    void readyOcr().catch(() => null);
   });
   return <>{props.children}</>;
 }

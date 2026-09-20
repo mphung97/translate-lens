@@ -22,6 +22,8 @@ export const OCR_SMALL_PNG_CUTOFF = 800;
 export const OCR_TINY_UPSCALE_CUTOFF = 400;
 export const OCR_JPEG_FALLBACK_BYTES = 500 * 1024;
 
+export const OCR_MIN_SCORE = 0.7;
+
 export const WINDOW_WIDTH = 500;
 export const MAX_WINDOW_HEIGHT = 700;
 

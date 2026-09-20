@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import { MAX_WINDOW_HEIGHT } from "@/constants";
 import { resizeWindow, setupAutoResize } from "@/lib/resizeWindow";
 import Toolbar from "./Toolbar";
+import Splash from "./Splash";
 
 export type Mode = "upload" | "paste" | "settings";
 
@@ -62,7 +63,7 @@ export default function Popup(props: ParentProps) {
           ])}
         >
           <Toolbar />
-          {props.children}
+          <Splash>{props.children}</Splash>
         </div>
       </div>
     </>

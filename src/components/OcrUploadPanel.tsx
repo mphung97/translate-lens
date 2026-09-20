@@ -8,6 +8,7 @@ import { useNavigate } from "@solidjs/router";
 import { fmtShortcut, MOD_KEY } from "@/lib/platform";
 import { prepareImageForOcr } from "@/lib/image";
 import { resolveCredentials, translate, TranslateError } from "@/lib/translate";
+import { recognizeLocal } from "@/lib/localOcr";
 import { usePreferences } from "@/stores/preferences";
 import { useTranslation } from "@/stores/translation";
 import { cn } from "@/lib/utils";
@@ -15,6 +16,7 @@ import Badge from "./Badge";
 import {
   FALLBACK_CLIPBOARD_IMAGE_ERROR,
   MAX_UPLOAD_FILES,
+  OCR_MIN_SCORE,
   ROUTES,
 } from "@/constants";
 
@@ -38,17 +40,48 @@ export default function OcrUploadPanel() {
     try {
       const provider = prefs.preferences().byokProvider;
       const { apiKey } = resolveCredentials(prefs.apiKeys(), provider);
+      const targetLanguage = prefs.preferences().targetLanguage;
       const image = await readImage();
       const [rgba, size] = await Promise.all([image.rgba(), image.size()]);
       const prepared = await prepareImageForOcr(rgba, size.width, size.height);
-      const result = await translate({
-        imageData: prepared.bytes,
-        imageMediaType: prepared.mediaType,
-        targetLanguage: prefs.preferences().targetLanguage,
-        provider,
-        apiKey,
-      });
-      t.setTranslationResult(result, "upload");
+
+      // Local first (awaits init when the user clicks before ready),
+      // cloud vision fallback when recognition is weak or empty.
+      let localText: string | null = null;
+      let localScore: number | null = null;
+      try {
+        const local = await recognizeLocal(prepared.bytes, prepared.mediaType);
+        console.info("[ocr]", {
+          avgScore: local.avgScore,
+          minScore: local.minScore,
+          lineCount: local.lineCount,
+        });
+        if (local.text.trim() && local.avgScore >= OCR_MIN_SCORE) {
+          localText = local.text;
+          localScore = local.avgScore;
+        }
+      } catch {
+        localText = null;
+      }
+
+      if (localText !== null) {
+        const result = await translate({
+          text: localText,
+          targetLanguage,
+          provider,
+          apiKey,
+        });
+        t.setTranslationResult(result, "upload", "local", localScore);
+      } else {
+        const result = await translate({
+          imageData: prepared.bytes,
+          imageMediaType: prepared.mediaType,
+          targetLanguage,
+          provider,
+          apiKey,
+        });
+        t.setTranslationResult(result, "upload", "cloud");
+      }
       navigate(ROUTES.result);
     } catch (e) {
       setState({
@@ -134,7 +167,7 @@ export default function OcrUploadPanel() {
           </div>
 
           <div class="mt-[2px]">
-            <FileField.Trigger
+            {/* <FileField.Trigger
               class={cn([
                 "inline-flex items-center gap-1",
                 "text-[9.5px] font-bold",
@@ -151,7 +184,7 @@ export default function OcrUploadPanel() {
             </FileField.Trigger>
             <span class={cn(["text-[10px] ml-1", "text-ink"])}>
               để dán ảnh ngay từ Clipboard
-            </span>
+            </span> */}
           </div>
         </FileField.Dropzone>
 

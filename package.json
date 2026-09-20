@@ -16,6 +16,7 @@
     "@ai-sdk/groq": "^4.0.40",
     "@kobalte/core": "^0.13.14",
     "@openrouter/ai-sdk-provider": "^3.0.0",
+    "@paddleocr/paddleocr-js": "^0.4.2",
     "@solidjs/router": "^1.0.0",
     "@tauri-apps/api": "^2",
     "@tauri-apps/plugin-clipboard-manager": "~2.3.3",
