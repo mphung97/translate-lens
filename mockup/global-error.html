@@ -1,0 +1,296 @@
+<!DOCTYPE html><html lang="vi" style=""><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Translate Lens - Global Error System</title>
+<!-- Google Fonts: Space Grotesk & JetBrains Mono -->
+<link href="https://fonts.googleapis.com" rel="preconnect">
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&amp;family=Space+Grotesk:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<!-- Tailwind CSS v3 -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            paper: {
+              DEFAULT: '#eeebe2',
+              card: '#f7f5ec',
+              panel: '#f4f1e7',
+              desktop: '#ece8da',
+              dark: '#e3dfd3',
+            },
+            ink: {
+              DEFAULT: '#080909',
+              muted: '#625f57',
+              subtle: '#99947f',
+              border: '#d3cfc1',
+            },
+            sage: {
+              DEFAULT: '#7fa480',
+              hover: '#6f9370',
+              light: '#eaf1ea',
+              dark: '#587a59',
+            },
+            terracotta: {
+              DEFAULT: '#c87e74',
+              dark: '#a56961',
+              light: '#faeae7',
+              border: '#dfaba4',
+            }
+          },
+          fontFamily: {
+            sans: ['"Space Grotesk"', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          },
+          boxShadow: {
+            'keycap': '0 12px 30px -8px rgba(8, 9, 9, 0.14), 0 4px 10px -2px rgba(8, 9, 9, 0.06)',
+            'keycap-inset': 'inset 0 1px 1px rgba(255, 255, 255, 0.8), 0 1px 3px rgba(8, 9, 9, 0.1)',
+            'retro-panel': '0 20px 48px -12px rgba(8, 9, 9, 0.18), 0 1px 3px rgba(8, 9, 9, 0.08)',
+          }
+        }
+      }
+    }
+  </script>
+<!-- BEGIN: Custom Styles -->
+<style data-purpose="retro-aesthetic">
+    /* Subtle dot grid backdrop reminiscent of vintage engineering paper */
+    .bg-dot-grid {
+      background-color: #eeebe2;
+      background-image: radial-gradient(#d3cfc1 1.25px, transparent 1.25px);
+      background-size: 24px 24px;
+    }
+
+    /* Blinking Monkeytype retro terminal cursor */
+    @keyframes blink {
+      0%, 49% { opacity: 1; }
+      50%, 100% { opacity: 0; }
+    }
+    .caret-blink {
+      display: inline-block;
+      width: 0.55em;
+      height: 1.15em;
+      background-color: #7fa480;
+      margin-left: 0.15rem;
+      vertical-align: -0.15em;
+      animation: blink 1s infinite steps(1);
+    }
+
+    /* Soft pulse for system critical indicator */
+    @keyframes subtlePulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.75; transform: scale(1.08); }
+    }
+    .status-pulse {
+      animation: subtlePulse 2.4s infinite ease-in-out;
+    }
+  </style>
+<!-- END: Custom Styles -->
+</head>
+<body class="bg-dot-grid min-h-screen text-ink font-sans antialiased selection:bg-sage selection:text-white p-4 sm:p-8 lg:p-12 flex flex-col items-center justify-between">
+<!-- BEGIN: MainContent -->
+<main class="w-full max-w-5xl flex flex-col items-center">
+<!-- BEGIN: HeaderPresentation -->
+<header class="text-center max-w-3xl mb-10" data-purpose="presentation-header">
+<!-- Breadcrumb / System Identifier -->
+<div class="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-ink-border bg-paper-panel/80 text-xs font-mono tracking-widest text-ink-subtle uppercase mb-4 shadow-sm">
+<span class="w-2 h-2 rounded-full bg-terracotta"></span>
+<span class="">Translate Lens</span>
+<span class="text-ink-border">·</span>
+<span class="">System Exception &amp; Recovery</span>
+</div>
+<!-- Main Headline with Blinking Caret -->
+<h1 class="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-ink mb-3 font-mono">
+        Global Error System<span class="caret-blink"></span>
+</h1>
+<!-- Informative Subtitle -->
+<p class="text-sm sm:text-base text-ink-muted leading-relaxed max-w-2xl mx-auto font-medium">
+        Màn hình xử lý sự cố toàn hệ thống (Global Exception / Crash Handler) khi ứng dụng gặp lỗi nghiêm trọng (Fatal Engine Error, Crash Handler, Network Drop, Corrupted Cache) với cơ chế bảo toàn dữ liệu 100%.
+      </p>
+</header>
+<!-- END: HeaderPresentation -->
+<!-- BEGIN: DesktopSimulatedCanvas -->
+<!-- Simulated Desktop Environment Window Frame -->
+<section class="w-full bg-paper-desktop border border-ink-border rounded-3xl p-4 sm:p-10 lg:p-12 shadow-inner relative flex flex-col items-center justify-center mb-12 overflow-hidden" data-purpose="desktop-simulator">
+<!-- Ambient Mock Background Panels (Visual Depth) -->
+<div aria-hidden="true" class="absolute left-6 top-8 w-44 h-24 bg-paper-dark/45 rounded-xl border border-ink-border/50 hidden md:flex flex-col p-3 gap-2 pointer-events-none select-none opacity-60">
+<div class="w-16 h-2 bg-ink-subtle/30 rounded"></div>
+<div class="w-full h-1.5 bg-ink-subtle/20 rounded"></div>
+<div class="w-3/4 h-1.5 bg-ink-subtle/20 rounded"></div>
+</div>
+<div aria-hidden="true" class="absolute right-6 bottom-8 w-48 h-28 bg-paper-dark/45 rounded-xl border border-ink-border/50 hidden md:flex flex-col p-3 gap-2.5 pointer-events-none select-none opacity-60">
+<div class="w-20 h-2 bg-ink-subtle/30 rounded"></div>
+<div class="w-full h-1.5 bg-ink-subtle/20 rounded"></div>
+<div class="w-5/6 h-1.5 bg-ink-subtle/20 rounded"></div>
+<div class="w-2/3 h-1.5 bg-ink-subtle/20 rounded"></div>
+</div>
+<!-- BEGIN: FloatingErrorModal -->
+<!-- Centered Floating Desktop Modal (Width 440px) -->
+<article class="w-full max-w-[440px] bg-paper-card border-2 border-ink-border rounded-2xl shadow-retro-panel relative z-10 flex flex-col overflow-hidden" data-purpose="error-dialog-window">
+<!-- Window Title Bar -->
+
+<!-- Modal Interior Body -->
+<div class="p-6 flex flex-col items-center text-center">
+<!-- Retro Optical Reticle Icon with Terracotta Warning Accent -->
+<div class="relative w-20 h-20 mb-4 flex items-center justify-center" data-purpose="retro-warning-emblem">
+<!-- Vintage Registration Brackets (#c87e74) -->
+<div class="absolute -top-1 -left-1 w-3.5 h-3.5 border-t-2 border-l-2 border-terracotta rounded-tl-[2px]"></div>
+<div class="absolute -top-1 -right-1 w-3.5 h-3.5 border-t-2 border-r-2 border-terracotta rounded-tr-[2px]"></div>
+<div class="absolute -bottom-1 -left-1 w-3.5 h-3.5 border-b-2 border-l-2 border-terracotta rounded-bl-[2px]"></div>
+<div class="absolute -bottom-1 -right-1 w-3.5 h-3.5 border-b-2 border-r-2 border-terracotta rounded-br-[2px]"></div>
+<!-- Optical Loupe Frame -->
+<div class="w-16 h-16 rounded-full border-4 border-ink bg-paper-panel flex items-center justify-center relative shadow-sm">
+<!-- Aperture Ring -->
+<div class="w-12 h-12 rounded-full border border-dashed border-ink-border flex items-center justify-center">
+<!-- Exclamation & Loupe Stem Synthesis -->
+<span class="font-mono text-2xl font-black text-terracotta leading-none">!</span>
+</div>
+<!-- Loupe Handle pointing diagonally bottom-right -->
+<div class="absolute -bottom-2 -right-2 w-5 h-2 bg-ink rotate-45 rounded-sm origin-center">
+<div class="w-3 h-0.5 bg-terracotta mx-auto mt-0.5"></div>
+</div>
+</div>
+</div>
+<!-- Primary Heading -->
+<h2 class="text-xl font-bold text-ink tracking-tight mb-2">
+            Đã xảy ra sự cố hệ thống
+          </h2>
+<!-- Descriptive Cause Explanation -->
+<p class="text-xs sm:text-sm text-ink-muted leading-relaxed mb-4 text-center">
+            Ứng dụng Translate Lens vừa phát hiện ngoại lệ nghiêm trọng và đã tự động cách ly tiến trình để bảo vệ dữ liệu phiên làm việc của bạn.
+          </p>
+<!-- BEGIN: PreservedDataBuffer -->
+<!-- 100% Data Preservation Box -->
+<div class="w-full bg-paper-panel border border-ink-border rounded-xl p-3 text-left mb-4 shadow-sm" data-purpose="preserved-buffer-card">
+<div class="flex items-center justify-between pb-1.5 mb-1.5 border-b border-ink-border/60">
+<span class="font-mono text-[10px] font-bold text-sage-dark flex items-center gap-1.5 uppercase tracking-wider">
+<span class="w-1.5 h-1.5 rounded-full bg-sage inline-block"></span>
+                Đã sao lưu dữ liệu gần nhất (0 LOSS)
+              </span>
+<button class="font-mono text-[10px] text-ink-muted hover:text-ink px-1.5 py-0.5 rounded border border-ink-border bg-paper hover:bg-paper-dark transition flex items-center gap-1" id="copyBufferBtn" title="Sao chép văn bản lưu đệm" type="button">
+<span class="">Sao chép</span>
+<kbd class="text-[9px] bg-paper-dark px-1 rounded border border-ink-border/80">⌘C</kbd>
+</button>
+</div>
+<!-- Captured OCR Text Snippet -->
+<p class="font-sans text-xs text-ink bg-paper p-2 rounded border border-ink-border/50 font-medium select-all break-words leading-relaxed" id="preservedText">
+              学而时习之，不亦说乎？有朋自远方来，不亦乐乎？
+            </p>
+</div>
+<!-- END: PreservedDataBuffer -->
+<!-- BEGIN: TechnicalExceptionSnippet -->
+<!-- Exception Details & System State -->
+<div class="w-full bg-paper rounded-lg border border-ink-border p-2.5 mb-5 text-left font-mono" data-purpose="exception-accordion">
+<div class="flex items-center justify-between">
+<span class="text-[11px] font-bold text-terracotta-dark flex items-center gap-1">
+<code>ERR_CORE_PIPELINE_CRASH</code>
+<span class="text-ink-subtle">(0x8004F2)</span>
+</span>
+<span class="text-[9px] text-ink-subtle uppercase px-1.5 py-0.5 rounded bg-paper-panel border border-ink-border">
+                SIGSEGV
+              </span>
+</div>
+<div class="mt-1 pt-1 border-t border-dashed border-ink-border/70 flex items-center justify-between text-[10px] text-ink-subtle">
+<span class="">Memory heap isolated</span>
+<span class="">State: 14:32:08 UTC+7</span>
+</div>
+</div>
+<!-- END: TechnicalExceptionSnippet -->
+<!-- BEGIN: ActionButtonsBar -->
+<!-- Actions: Primary Green & Secondary Ghost Controls -->
+<div class="w-full flex flex-col gap-2" data-purpose="recovery-actions">
+<!-- Primary Action Button: Restart Engine -->
+<button class="w-full py-2.5 px-4 rounded-xl bg-ink hover:bg-black text-sage border border-ink shadow-keycap flex items-center justify-center gap-2 font-mono text-xs font-bold tracking-wide transition transform active:translate-y-0.5" title="Khởi động lại tiến trình OCR và Engine" type="button">
+<span class="">Khởi động lại ứng dụng</span>
+<span class="px-1.5 py-0.5 rounded bg-ink-muted/30 text-sage-light text-[10px] border border-sage/40">↵ R</span>
+</button>
+<!-- Secondary Actions Grid -->
+<div class="grid grid-cols-2 gap-2 font-mono text-xs">
+<button class="py-2 px-2.5 rounded-xl border border-ink-border bg-paper hover:bg-paper-panel text-ink transition flex items-center justify-center gap-1.5 shadow-sm" title="Kiểm tra stack trace và runtime logs" type="button">
+<span class="">Xem log chi tiết</span>
+<kbd class="text-[10px] text-ink-subtle bg-paper-dark/70 px-1 rounded">L</kbd>
+</button>
+<button class="py-2 px-2.5 rounded-xl border border-ink-border bg-paper hover:bg-paper-panel text-ink transition flex items-center justify-center gap-1.5 shadow-sm" title="Mở bảng cấu hình khẩn cấp để reset model" type="button">
+<span class="">Mở cấu hình</span>
+<kbd class="text-[10px] text-ink-subtle bg-paper-dark/70 px-1 rounded">S</kbd>
+</button>
+</div>
+</div>
+<!-- END: ActionButtonsBar -->
+</div>
+<!-- Window Footer / Resize Grip -->
+
+</article>
+<!-- END: FloatingErrorModal -->
+</section>
+<!-- END: DesktopSimulatedCanvas -->
+<!-- BEGIN: ArchitectureSpecsGrid -->
+<!-- Descriptive Summary Cards Section -->
+<section class="w-full grid grid-cols-1 md:grid-cols-3 gap-4" data-purpose="recovery-architecture-specs">
+<!-- Spec Card 1 -->
+<div class="bg-paper-card border border-ink-border rounded-2xl p-5 shadow-sm hover:border-ink-subtle transition">
+<div class="flex items-center gap-2 mb-2.5 font-mono text-xs font-bold text-ink">
+<span class="w-2 h-2 rounded-full bg-sage"></span>
+<h3 class="">1. BẢO TOÀN TRẠNG THÁI (STATE SNAPSHOT)</h3>
+</div>
+<p class="text-xs text-ink-muted leading-relaxed font-medium">
+          Tự động dump văn bản OCR và clipboard vào SQLite bộ nhớ an toàn trước khi crash, đảm bảo người dùng không bao giờ mất đoạn trích đang dịch.
+        </p>
+</div>
+<!-- Spec Card 2 -->
+<div class="bg-paper-card border border-ink-border rounded-2xl p-5 shadow-sm hover:border-ink-subtle transition">
+<div class="flex items-center gap-2 mb-2.5 font-mono text-xs font-bold text-ink">
+<span class="w-2 h-2 rounded-full bg-terracotta"></span>
+<h3 class="">2. KHÔI PHỤC TIẾN TRÌNH 1-CHẠM</h3>
+</div>
+<p class="text-xs text-ink-muted leading-relaxed font-medium">
+          Khởi động lại engine OCR và giải phóng bộ nhớ đệm mà không làm gián đoạn cửa sổ công việc khác, thiết lập lại ONNX Runtime chỉ trong 800ms.
+        </p>
+</div>
+<!-- Spec Card 3 -->
+<div class="bg-paper-card border border-ink-border rounded-2xl p-5 shadow-sm hover:border-ink-subtle transition">
+<div class="flex items-center gap-2 mb-2.5 font-mono text-xs font-bold text-ink">
+<span class="w-2 h-2 rounded-full bg-sage"></span>
+<h3 class="">3. TƯƠNG THÍCH ĐA NỀN TẢNG (MAC &amp; WIN)</h3>
+</div>
+<p class="text-xs text-ink-muted leading-relaxed font-medium">
+          Phím tắt toàn cục đồng bộ (Enter để restart, Esc để ẩn modal, C để copy dữ liệu đệm), tối ưu hóa trải nghiệm bàn phím chuẩn Monkeytype 9009.
+        </p>
+</div>
+</section>
+<!-- END: ArchitectureSpecsGrid -->
+</main>
+<!-- END: MainContent -->
+<!-- BEGIN: PageFooter -->
+<footer class="mt-12 text-center select-none" data-purpose="system-meta-footer">
+<p class="font-mono text-[11px] text-ink-subtle uppercase tracking-wider">
+      Translate Lens · Global Error Recovery Spec · Monkeytype 9009 Aesthetic
+    </p>
+</footer>
+<!-- END: PageFooter -->
+<!-- BEGIN: InteractivityScript -->
+<script data-purpose="clipboard-interaction">
+    document.addEventListener('DOMContentLoaded', () => {
+      const copyBtn = document.getElementById('copyBufferBtn');
+      const preservedTextEl = document.getElementById('preservedText');
+
+      if (copyBtn && preservedTextEl) {
+        copyBtn.addEventListener('click', () => {
+          const textToCopy = preservedTextEl.innerText;
+          navigator.clipboard.writeText(textToCopy).then(() => {
+            const originalHTML = copyBtn.innerHTML;
+            copyBtn.innerHTML = '<span class="text-sage font-bold">Đã chép ✓</span>';
+            setTimeout(() => {
+              copyBtn.innerHTML = originalHTML;
+            }, 1800);
+          }).catch(err => {
+            console.error('Không thể copy:', err);
+          });
+        });
+      }
+    });
+  </script>
+<!-- END: InteractivityScript -->
+
+
+</body></html>

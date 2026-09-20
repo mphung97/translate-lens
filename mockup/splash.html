@@ -1,0 +1,639 @@
+<!DOCTYPE html><html lang="vi" style=""><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Translate Lens - App Startup &amp; Resource Preloader</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&amp;family=Space+Grotesk:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+  /* ============ Monkeytype 9009 Theme Tokens ============ */
+  :root {
+    --bg-color: #eeebe2;
+    --main-color: #080909;
+    --caret-color: #7fa480;
+    --caret-deep: #4d6b52;
+    --sub-color: #99947f;
+    --sub-alt-color: #d3cfc1;
+    --text-color: #080909;
+    --error-color: #c87e74;
+    --error-extra-color: #a56961;
+
+    --bg: #eeebe2;
+    --desk: #ece8da;
+    --paper: #f7f5ec;
+    --panel: #f4f1e7;
+    --ink: #6b6755;
+    --chip: #59553f;
+    --hair: rgba(8,9,9,0.08);
+
+    --mono: "JetBrains Mono", ui-monospace, monospace;
+    --sans: "Space Grotesk", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background-color: var(--bg);
+    color: var(--main-color);
+    font-family: var(--sans);
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 24px;
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  /* Background subtle grid pattern */
+  body::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: 
+      radial-gradient(circle at 1px 1px, rgba(8,9,9,0.04) 1px, transparent 0);
+    background-size: 24px 24px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .wrap {
+    width: 100%;
+    max-width: 960px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  /* Header specs label */
+  .header-meta {
+    text-align: center;
+    margin-bottom: 28px;
+  }
+  .overtitle {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: var(--ink);
+  }
+  .main-heading {
+    font-family: var(--sans);
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--main-color);
+    margin-top: 6px;
+  }
+  .sub-heading {
+    font-size: 13.5px;
+    color: var(--ink);
+    margin-top: 6px;
+    max-width: 620px;
+  }
+
+  /* Desktop Container Frame (Simulated desktop backdrop) */
+  .desktop-backdrop {
+    width: 100%;
+    max-width: 820px;
+    background: var(--desk);
+    border: 1px solid rgba(8,9,9,0.08);
+    border-radius: 20px;
+    padding: 48px 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    box-shadow: 0 20px 48px -28px rgba(8,9,9,0.22);
+    overflow: hidden;
+  }
+
+  /* Ghost decorative windows in background simulating desktop work environment */
+  .bg-ghost-window {
+    position: absolute;
+    background: #f8f5ec;
+    border: 1px solid rgba(8,9,9,0.05);
+    border-radius: 12px;
+    padding: 16px;
+    opacity: 0.65;
+    pointer-events: none;
+  }
+  .bg-ghost-left {
+    left: -20px;
+    top: 40px;
+    width: 220px;
+    transform: rotate(-3deg);
+  }
+  .bg-ghost-right {
+    right: -20px;
+    bottom: 40px;
+    width: 200px;
+    transform: rotate(3deg);
+  }
+  .ghost-line {
+    height: 7px;
+    border-radius: 4px;
+    background: rgba(8,9,9,0.1);
+    margin: 8px 0;
+  }
+
+  /* Splash Window Modal */
+  .splash-modal {
+    width: 440px;
+    max-width: 100%;
+    background: var(--bg);
+    border: 1px solid rgba(8,9,9,0.14);
+    border-radius: 18px;
+    box-shadow: 0 32px 70px -20px rgba(8,9,9,0.4), 0 8px 24px -10px rgba(8,9,9,0.18);
+    overflow: hidden;
+    position: relative;
+    z-index: 5;
+  }
+
+  /* Toolbar */
+  .tb {
+    height: 42px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 14px;
+    background: var(--sub-alt-color);
+    border-bottom: 1px solid rgba(8,9,9,0.08);
+  }
+  .grip {
+    display: grid;
+    grid-template-columns: repeat(2, 3px);
+    grid-template-rows: repeat(3, 3px);
+    gap: 3px;
+  }
+  .grip i {
+    background: rgba(8,9,9,0.35);
+    border-radius: 50%;
+  }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--main-color);
+  }
+  .bdot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--caret-color);
+    box-shadow: 0 0 6px rgba(127,164,128,0.6);
+  }
+  .tb-spacer { flex: 1; }
+  .version-tag {
+    font-family: var(--mono);
+    font-size: 9.5px;
+    font-weight: 600;
+    color: var(--ink);
+    background: rgba(8,9,9,0.06);
+    padding: 3px 7px;
+    border-radius: 5px;
+  }
+
+  /* Splash Body */
+  .splash-body {
+    padding: 36px 32px 28px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    background: var(--bg);
+  }
+
+  /* Logo Presentation */
+  .logo-container {
+    width: 92px;
+    height: 92px;
+    border-radius: 24px;
+    position: relative;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .logo-img {
+    width: 88px;
+    height: 88px;
+    object-fit: contain;
+    border-radius: 20px;
+    box-shadow: 0 10px 24px -10px rgba(8,9,9,0.3);
+  }
+  .logo-pulse-ring {
+    position: absolute;
+    inset: -6px;
+    border: 2px dashed rgba(127,164,128,0.45);
+    border-radius: 28px;
+    animation: spin 18s linear infinite;
+  }
+  @keyframes spin { 100% { transform: rotate(360deg); } }
+
+  .app-name {
+    font-family: var(--mono);
+    font-size: 20px;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    color: var(--main-color);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .app-tagline {
+    font-size: 12.5px;
+    color: var(--ink);
+    margin-top: 4px;
+    margin-bottom: 26px;
+  }
+
+  /* Resource Checklist & Status Box */
+  .resource-box {
+    width: 100%;
+    background: var(--panel);
+    border: 1px solid rgba(8,9,9,0.08);
+    border-radius: 12px;
+    padding: 14px 16px;
+    text-align: left;
+    margin-bottom: 20px;
+  }
+  .resource-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+  .resource-title {
+    font-family: var(--mono);
+    font-size: 9.5px;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ink);
+  }
+  .resource-count {
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--caret-deep);
+  }
+
+  .resource-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .resource-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    color: var(--main-color);
+  }
+  .resource-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .status-icon {
+    width: 14px;
+    height: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .status-icon.done {
+    color: var(--caret-deep);
+  }
+  .status-icon.loading {
+    color: var(--caret-color);
+    animation: spin 1.5s linear infinite;
+  }
+  .status-icon.pending {
+    color: var(--sub-color);
+  }
+  .resource-status-badge {
+    font-size: 9px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 2px 6px;
+    border-radius: 4px;
+  }
+  .badge-done {
+    background: rgba(127,164,128,0.22);
+    color: var(--caret-deep);
+  }
+  .badge-loading {
+    background: rgba(127,164,128,0.35);
+    color: #2b4530;
+  }
+  .badge-pending {
+    background: rgba(8,9,9,0.06);
+    color: var(--sub-color);
+  }
+
+  /* Progress Bar */
+  .progress-section {
+    width: 100%;
+  }
+  .progress-label-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: var(--mono);
+    font-size: 10px;
+    margin-bottom: 8px;
+    color: var(--ink);
+  }
+  .curr-status-text {
+    font-weight: 600;
+    color: var(--main-color);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .curr-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--caret-color);
+  }
+  .percentage {
+    font-weight: 700;
+    color: var(--main-color);
+  }
+
+  .progress-track {
+    width: 100%;
+    height: 7px;
+    background: var(--sub-alt-color);
+    border-radius: 999px;
+    overflow: hidden;
+    position: relative;
+    border: 1px solid rgba(8,9,9,0.06);
+  }
+  .progress-fill {
+    height: 100%;
+    width: 72%;
+    background: var(--caret-color);
+    border-radius: 999px;
+    transition: width 0.3s ease;
+  }
+
+  /* Footer Note */
+  .splash-footer {
+    width: 100%;
+    margin-top: 22px;
+    padding-top: 14px;
+    border-top: 1px solid rgba(8,9,9,0.07);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: var(--mono);
+    font-size: 9.5px;
+    color: var(--ink);
+  }
+  .shortcut-tip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .key {
+    background: var(--sub-alt-color);
+    color: var(--main-color);
+    padding: 1px 5px;
+    border-radius: 4px;
+    font-weight: 600;
+    font-size: 9px;
+  }
+
+  /* Specification Matrix Cards below */
+  .specs-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    width: 100%;
+    max-width: 820px;
+    margin-top: 24px;
+  }
+  .spec-card {
+    background: var(--paper);
+    border: 1px solid rgba(8,9,9,0.08);
+    border-radius: 14px;
+    padding: 18px 20px;
+  }
+  .spec-title {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--main-color);
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .spec-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--caret-color);
+  }
+  .spec-desc {
+    font-size: 12.5px;
+    line-height: 1.6;
+    color: var(--ink);
+  }
+
+  @media (max-width: 768px) {
+    .specs-row {
+      grid-template-columns: 1fr;
+    }
+    .splash-modal {
+      width: 100%;
+    }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <!-- Header Section -->
+  <div class="header-meta">
+    <p class="overtitle">Translate Lens · Startup Flow</p>
+    <h1 class="main-heading">App Startup &amp; Preloader</h1>
+    <p class="sub-heading">Màn hình chờ tải tài nguyên khởi tạo ứng dụng: nạp model OCR ngoại tuyến, cache từ điển Hán-Việt/Pinyin và xác thực trạng thái Keychain API Key.</p>
+  </div>
+
+  <!-- Simulated Desktop Workspace -->
+  <div class="desktop-backdrop">
+
+    <!-- Decorative background document cards (Context) -->
+    <div class="bg-ghost-window bg-ghost-left">
+      <div style="height:8px; width:45%; background:rgba(8,9,9,0.15); border-radius:4px; margin-bottom:12px;"></div>
+      <div class="ghost-line" style="width:100%"></div>
+      <div class="ghost-line" style="width:85%"></div>
+      <div class="ghost-line" style="width:90%"></div>
+      <div class="ghost-line" style="width:60%"></div>
+    </div>
+
+    <div class="bg-ghost-window bg-ghost-right">
+      <div style="height:8px; width:50%; background:rgba(8,9,9,0.15); border-radius:4px; margin-bottom:12px;"></div>
+      <div class="ghost-line" style="width:95%"></div>
+      <div class="ghost-line" style="width:75%"></div>
+      <div class="ghost-line" style="width:88%"></div>
+    </div>
+
+    <!-- Central Splash Modal -->
+    <div class="splash-modal">
+      
+      <!-- Window Title Bar / Grip -->
+      
+
+      <!-- Content Area -->
+      <div class="splash-body">
+        
+        <!-- App Brand Logo (Reusing https://lh3.googleusercontent.com/aida/AEtjO1V_KtjZKw8ALtJvgEi6uoD0iTdedDVLXLlvbANU_0wfCF_wOx8IAA1fvEicvFAshSIfU5LjK2wAuWErW9cFriUHaUAtpDUpd1neuTmPRSeKPP4w_Mi6HlQdAmphz5_15B-XsEUp066AzYHe6VdN7wo0rfvNvbF1D6icE5JZSMz8z_5_12tI9pnN523qi5i30lfcK23MUiLPUuNox72y2NYaBBqPkh3a12i5k2Yvd-HnRGVVYx1XEAh4xQ) -->
+        <div class="logo-container">
+          <div class="logo-pulse-ring"></div>
+          <img class="logo-img" src="https://lh3.googleusercontent.com/aida/AEtjO1V_KtjZKw8ALtJvgEi6uoD0iTdedDVLXLlvbANU_0wfCF_wOx8IAA1fvEicvFAshSIfU5LjK2wAuWErW9cFriUHaUAtpDUpd1neuTmPRSeKPP4w_Mi6HlQdAmphz5_15B-XsEUp066AzYHe6VdN7wo0rfvNvbF1D6icE5JZSMz8z_5_12tI9pnN523qi5i30lfcK23MUiLPUuNox72y2NYaBBqPkh3a12i5k2Yvd-HnRGVVYx1XEAh4xQ" alt="Translate Lens App Logo">
+        </div>
+
+        <h2 class="app-name">TRANSLATE LENS</h2>
+        <p class="app-tagline">Đang chuẩn bị môi trường dịch thuật &amp; OCR...</p>
+
+        <!-- Resource Checklist -->
+        <div class="resource-box">
+          <div class="resource-header">
+            <span class="resource-title">Khởi tạo tài nguyên</span>
+            <span class="resource-count">3 / 4 HOÀN TẤT</span>
+          </div>
+          <ul class="resource-list">
+            
+            <!-- Item 1: Keychain & Config -->
+            <li class="resource-item">
+              <span class="resource-left">
+                <span class="status-icon done">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                </span>
+                <span class="">Cấu hình &amp; BYOK Keychain</span>
+              </span>
+              <span class="resource-status-badge badge-done">Sẵn sàng</span>
+            </li>
+
+            <!-- Item 2: Offline Dictionary & Pinyin Syllabary -->
+            <li class="resource-item">
+              <span class="resource-left">
+                <span class="status-icon done">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                </span>
+                <span class="">Từ điển Hán-Việt &amp; Bính âm Pinyin</span>
+              </span>
+              <span class="resource-status-badge badge-done">14.8 MB OK</span>
+            </li>
+
+            <!-- Item 3: Local OCR Engine (Vision ONNX) - In progress -->
+            <li class="resource-item">
+              <span class="resource-left">
+                <span class="status-icon loading">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="12" y1="2" x2="12" y2="6"></line>
+                    <line x1="12" y1="18" x2="12" y2="22"></line>
+                    <line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line>
+                    <line x1="16.24" y1="16.24" x2="19.07" y2="19.07"></line>
+                    <line x1="2" y1="12" x2="6" y2="12"></line>
+                    <line x1="18" y1="12" x2="22" y2="12"></line>
+                    <line x1="4.93" y1="19.07" x2="7.76" y2="16.24"></line>
+                    <line x1="16.24" y1="7.76" x2="19.07" y2="4.93"></line>
+                  </svg>
+                </span>
+                <span class="">Trọng số mô hình OCR (Vision ONNX)</span>
+              </span>
+              <span class="resource-status-badge badge-loading">Đang nạp 72%</span>
+            </li>
+
+            <!-- Item 4: Overlay Hook & Shortcut listener -->
+            <li class="resource-item" style="opacity: 0.65;">
+              <span class="resource-left">
+                <span class="status-icon pending">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="9"></circle>
+                  </svg>
+                </span>
+                <span class="">Đăng ký phím tắt toàn hệ thống</span>
+              </span>
+              <span class="resource-status-badge badge-pending">Chờ</span>
+            </li>
+
+          </ul>
+        </div>
+
+        <!-- Overall Progress Bar -->
+        <div class="progress-section">
+          <div class="progress-label-row">
+            <span class="curr-status-text">
+              <i class="curr-dot"></i>
+              Đang biên dịch tệp weights...
+            </span>
+            <span class="percentage">72%</span>
+          </div>
+          <div class="progress-track">
+            <div class="progress-fill"></div>
+          </div>
+        </div>
+
+        <!-- Footer Bar inside modal -->
+        
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- Design Notes & Technical Specs -->
+  <div class="specs-row">
+    <div class="spec-card">
+      <h3 class="spec-title"><span class="spec-dot"></span>1. Khởi tạo tài nguyên</h3>
+      <p class="spec-desc">Tự động tải bộ từ điển cục bộ (~15MB), nạp thư viện nhận diện ký tự OCR ONNX và kiểm tra khóa API trong Secure Keychain để người dùng tra từ tức thì không có độ trễ.</p>
+    </div>
+    <div class="spec-card">
+      <h3 class="spec-title"><span class="spec-dot"></span>2. Nhận diện thương hiệu 9009</h3>
+      <p class="spec-desc">Ứng dụng biểu tượng logo chính thức của Translate Lens với viền xoay nét đứt nhẹ nhàng, kết hợp bảng màu hoài cổ Monkeytype 9009 (nền giấy <code>#eeebe2</code>, xanh phím <code>#7fa480</code>).</p>
+    </div>
+    <div class="spec-card">
+      <h3 class="spec-title"><span class="spec-dot"></span>3. Trải nghiệm người dùng mượt mà</h3>
+      <p class="spec-desc">Thanh tiến trình (72%) và danh sách kiểm tra minh bạch từng module giúp người dùng nắm rõ quá trình nạp tài nguyên, tự động đóng chuyển sang thanh Lens sau khi hoàn tất.</p>
+    </div>
+  </div>
+
+</div>
+
+
+
+
+
+</body></html>

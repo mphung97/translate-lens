@@ -1,0 +1,300 @@
+<!DOCTYPE html><html lang="vi" style=""><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Translate Lens - Settings (BYOK &amp; Configuration)</title>
+<!-- Google Fonts for JetBrains Mono & Space Grotesk -->
+<link href="https://fonts.googleapis.com" rel="preconnect">
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&amp;family=Space+Grotesk:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<!-- Tailwind CSS v3 with Plugins -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Custom Configuration for Monkeytype 9009 Palette -->
+<script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            theme: {
+              bg: '#eeebe2',
+              main: '#080909',
+              caret: '#7fa480',
+              'caret-deep': '#55765c',
+              sub: '#99947f',
+              'sub-alt': '#d3cfc1',
+              error: '#c87e74',
+              ink: '#6b6755',
+              chip: '#59553f',
+              panel: '#f4f1e7',
+              paper: '#f7f5ec',
+              desk: '#ece8da'
+            }
+          },
+          fontFamily: {
+            mono: ['"JetBrains Mono"', 'monospace'],
+            sans: ['"Space Grotesk"', 'sans-serif']
+          },
+          boxShadow: {
+            'window-9009': '0 30px 70px -22px rgba(8, 9, 9, 0.45), 0 8px 22px -10px rgba(8, 9, 9, 0.2)',
+            'card-float': '0 12px 28px -6px rgba(8, 9, 9, 0.08), 0 0 0 1px rgba(153, 148, 127, 0.15)'
+          }
+        }
+      }
+    }
+  </script>
+<!-- BEGIN: Custom Styles -->
+<style data-purpose="base-styling">
+    body {
+      background-color: #eeebe2;
+      color: #080909;
+      font-family: 'Space Grotesk', sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+    .font-code {
+      font-family: 'JetBrains Mono', monospace;
+    }
+  </style>
+<!-- END: Custom Styles -->
+</head>
+<body class="min-h-screen bg-theme-bg py-10 px-4 md:px-8 flex flex-col items-center justify-center">
+<!-- BEGIN: PageWrapper -->
+<div class="max-w-6xl w-full mx-auto flex flex-col items-center" data-purpose="main-layout-container">
+<!-- BEGIN: TopShowcaseHeader -->
+<header class="text-center mb-10 max-w-3xl" data-purpose="showcase-header">
+<div class="font-code text-xs uppercase tracking-widest text-[#6b6755] font-semibold mb-3">
+    TRANSLATE LENS · 9009 UI PATTERN
+  </div>
+<h1 class="font-code text-3xl sm:text-4xl md:text-[42px] font-bold tracking-tight text-[#080909] mb-4 leading-tight">
+    Settings &amp; AI API Key (BYOK)
+  </h1>
+<p class="text-[#6b6755] text-sm sm:text-base leading-relaxed">
+    Tùy chỉnh ngôn ngữ đích, ghim cửa sổ luôn trên cùng và cấu hình khóa API riêng (Bring Your Own Key) cho các mô hình AI.
+  </p>
+</header>
+<!-- END: TopShowcaseHeader -->
+<!-- BEGIN: CentralShowcaseContainer -->
+<div class="relative w-full rounded-3xl bg-[#ece8da] p-6 md:p-14 mb-10 flex items-center justify-center border border-[rgba(8,9,9,0.08)] shadow-sm" data-purpose="central-showcase-wrapper">
+<!-- Decorative background ghost documents: Left -->
+<div class="hidden lg:flex flex-col gap-3 absolute top-10 left-8 w-56 p-5 rounded-2xl bg-[#f7f5ec] shadow-card-float border border-[rgba(8,9,9,0.08)] rotate-[-4deg] pointer-events-none opacity-85" data-purpose="decorative-card-left">
+<div class="flex items-center gap-2 mb-1">
+<span class="w-2 h-2 rounded-full bg-[#7fa480]"></span>
+<div class="w-16 h-2 bg-[#d3cfc1] rounded-full"></div>
+</div>
+<div class="w-40 h-2 bg-[#d3cfc1]/80 rounded-full"></div>
+<div class="w-32 h-2 bg-[#d3cfc1]/60 rounded-full"></div>
+<div class="w-36 h-2 bg-[#d3cfc1]/50 rounded-full"></div>
+<div class="pt-2 flex gap-1.5">
+<span class="px-2 py-0.5 rounded bg-[#eeebe2] text-[10px] font-code text-[#6b6755]">SYSTEM</span>
+<span class="px-2 py-0.5 rounded bg-[#eeebe2] text-[10px] font-code text-[#6b6755]">LOCAL</span>
+</div>
+</div>
+<!-- Decorative background ghost documents: Right -->
+<div class="hidden lg:flex flex-col gap-3 absolute bottom-10 right-8 w-60 p-5 rounded-2xl bg-[#f7f5ec] shadow-card-float border border-[rgba(8,9,9,0.08)] rotate-[3.5deg] pointer-events-none opacity-85" data-purpose="decorative-card-right">
+<div class="flex items-center justify-between mb-1">
+<div class="w-20 h-2.5 bg-[#d3cfc1] rounded-full"></div>
+<span class="w-1.5 h-1.5 rounded-full bg-[#99947f]"></span>
+</div>
+<div class="w-44 h-2 bg-[#d3cfc1]/80 rounded-full"></div>
+<div class="w-36 h-2 bg-[#d3cfc1]/60 rounded-full"></div>
+<div class="w-48 h-2 bg-[#d3cfc1]/40 rounded-full"></div>
+<div class="mt-1 p-2 rounded-lg bg-[#f4f1e7] border border-[rgba(8,9,9,0.06)] flex items-center justify-between">
+<span class="font-code text-[9px] text-[#6b6755]">BYOK READY</span>
+<span class="font-code text-[9px] text-[#55765c] font-bold">ACTIVE</span>
+</div>
+</div>
+<!-- BEGIN: ActivePopupSettingsWindow (.lupa) -->
+<section class="relative w-full max-w-[440px] bg-[#eeebe2] rounded-2xl shadow-window-9009 border border-[rgba(8,9,9,0.12)] overflow-visible text-[#080909] z-10" data-purpose="settings-popup-window">
+<!-- Toolbar (.tb, height: 42px, bg: #d3cfc1) -->
+
+<!-- Sub-bar Status Header -->
+<div class="px-4 py-2 bg-[#eeebe2] border-b border-[rgba(8,9,9,0.08)] flex items-center justify-between font-code text-xs">
+<div class="flex items-center gap-2">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[rgba(127,164,128,0.22)] text-[#55765c] font-bold text-[10px] tracking-wide border border-[#7fa480]/30">
+<span class="w-1.5 h-1.5 rounded-full bg-[#7fa480]"></span>
+          SETTINGS · BYOK
+        </span>
+<span class="px-2 py-0.5 rounded bg-[#d3cfc1]/60 text-[#59553f] font-semibold text-[10px] tracking-wide">
+          CONFIG MODE
+        </span>
+</div>
+<span class="inline-flex items-center gap-1 text-[10px] text-[#55765c] font-semibold">
+<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+<path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"></path>
+</svg>
+        Đã lưu (Auto-saved)
+      </span>
+</div>
+<!-- Main Settings Body in #eeebe2 -->
+<div class="p-4 space-y-3.5 font-sans">
+<!-- Card 1: Core Preferences (.panel: #f4f1e7) -->
+<div class="bg-[#f4f1e7] rounded-xl p-3.5 border border-[rgba(8,9,9,0.08)] shadow-xs space-y-3">
+<!-- Row 1: Target Language -->
+<div class="flex items-center justify-between gap-2">
+<div>
+<label class="block font-code text-xs font-bold text-[#080909] tracking-tight" for="target-lang">
+              Ngôn ngữ đích (Target Language)
+            </label>
+<p class="text-[11px] text-[#6b6755]">Ngôn ngữ mặc định khi tra nhanh</p>
+</div>
+<!-- Dropdown Selector -->
+<div class="relative min-w-[150px]">
+<select class="w-full appearance-none bg-[#eeebe2] text-[#080909] font-code text-xs font-semibold py-1.5 pl-2.5 pr-7 rounded-lg border border-[rgba(8,9,9,0.12)] focus:outline-none focus:ring-1 focus:ring-[#7fa480] cursor-pointer shadow-xs" id="target-lang">
+<option selected="">🇻🇳 Tiếng Việt (VI)</option>
+<option>🇺🇸 English (EN)</option>
+<option>🇯🇵 日本語 (JA)</option>
+<option>🇰🇷 한국어 (KO)</option>
+<option>🇫🇷 Français (FR)</option>
+</select>
+<div class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none text-[#99947f]">
+<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+<path d="M19 9l-7 7-7-7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</div>
+</div>
+</div>
+<div class="h-px bg-[rgba(8,9,9,0.06)]"></div>
+<!-- Row 2: Always on Top Toggle -->
+<div class="flex items-center justify-between gap-2">
+<div>
+<span class="block font-code text-xs font-bold text-[#080909] tracking-tight">
+              Luôn nổi trên màn hình (Always on top)
+            </span>
+<p class="text-[11px] text-[#6b6755]">Ghim cửa sổ popup trên tất cả ứng dụng</p>
+</div>
+<!-- Retro Switch Toggle (ON: track #7fa480, thumb #f7f5ed) -->
+<label class="relative inline-flex items-center cursor-pointer select-none">
+<input checked="" class="sr-only peer" type="checkbox">
+<div class="w-10 h-5 bg-[#d3cfc1] peer-focus:outline-none rounded-full peer peer-checked:bg-[#7fa480] transition-colors after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-[#f7f5ec] after:border after:border-[rgba(8,9,9,0.15)] after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-5 shadow-inner"></div>
+</label>
+</div>
+</div>
+<!-- Card 2: AI API Key BYOK (.panel: #f4f1e7) -->
+<div class="bg-[#f4f1e7] rounded-xl p-3.5 border border-[rgba(8,9,9,0.08)] shadow-xs space-y-3">
+<!-- Section Title & Badge -->
+<div class="flex items-center justify-between pb-2 border-b border-[rgba(8,9,9,0.06)]">
+<div class="flex items-center gap-1.5">
+<span class="w-1.5 h-1.5 rounded-full bg-[#7fa480]"></span>
+<span class="font-code text-xs font-bold text-[#080909] tracking-tight uppercase">
+              Cấu hình AI API Key (BYOK)
+            </span>
+</div>
+<span class="font-code text-[9px] font-bold px-1.5 py-0.5 rounded bg-[#eeebe2] text-[#59553f] border border-[rgba(8,9,9,0.08)]">
+            SECURE &amp; LOCAL
+          </span>
+</div>
+<!-- Provider pills -->
+<div>
+<label class="block font-code text-[11px] text-[#6b6755] font-semibold mb-1.5">Nhà cung cấp AI:</label>
+<div class="grid grid-cols-4 gap-1.5 font-code text-xs">
+<button class="py-1 px-2 rounded-lg bg-[#080909] text-[#eeebe2] font-bold text-center shadow-xs border border-[#080909]" type="button">
+              OpenAI
+            </button>
+<button class="py-1 px-2 rounded-lg bg-[#d3cfc1] text-[#080909] font-medium text-center hover:bg-[#d3cfc1]/80 transition-colors border border-[rgba(8,9,9,0.06)]" type="button">
+              Gemini
+            </button>
+<button class="py-1 px-2 rounded-lg bg-[#d3cfc1] text-[#080909] font-medium text-center hover:bg-[#d3cfc1]/80 transition-colors border border-[rgba(8,9,9,0.06)]" type="button">
+              Claude
+            </button>
+<button class="py-1 px-2 rounded-lg bg-[#d3cfc1] text-[#080909] font-medium text-center hover:bg-[#d3cfc1]/80 transition-colors border border-[rgba(8,9,9,0.06)]" type="button">
+              DeepSeek
+            </button>
+</div>
+</div>
+<!-- Model Selector Info -->
+<div class="flex items-center justify-between text-[11px] bg-[#eeebe2] px-2.5 py-1.5 rounded-lg border border-[rgba(8,9,9,0.06)] font-code">
+<span class="text-[#6b6755]">Mô hình: <strong class="text-[#080909]">gpt-4o-mini</strong></span>
+<span class="text-[#55765c] font-semibold text-[10px]">Khuyên dùng · Tiết kiệm</span>
+</div>
+<!-- API Key Input Field -->
+<div>
+<label class="block font-code text-[11px] text-[#6b6755] font-medium mb-1" for="api-key-input">Khóa API OpenAI:</label>
+<div class="relative flex items-center">
+<input class="w-full bg-[#eeebe2] text-[#080909] font-code text-xs py-2 pl-3 pr-24 rounded-lg border border-[rgba(8,9,9,0.15)] focus:outline-none focus:ring-1 focus:ring-[#7fa480] tracking-wider shadow-inner" id="api-key-input" readonly="" type="password" value="sk-proj-9009xKeyValSecureLocalAuthMockToken7721">
+<div class="absolute right-1.5 flex items-center gap-1">
+<!-- Reveal Eye Icon Button -->
+<button class="p-1 text-[#6b6755] hover:text-[#080909] rounded transition-colors" title="Hiện khóa API" type="button">
+<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+<path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+<path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</button>
+<!-- Test Connection Button -->
+<button class="font-code text-[10px] font-bold bg-[#d3cfc1] hover:bg-[#d3cfc1]/80 text-[#080909] px-2 py-1 rounded border border-black/10 transition-colors shadow-xs" type="button">
+                Test Key
+              </button>
+</div>
+</div>
+</div>
+<!-- Key Status -->
+<div class="flex items-center justify-between text-[11px] font-code pt-0.5">
+<div class="inline-flex items-center gap-1.5 text-[#55765c] font-semibold">
+<span class="w-2 h-2 rounded-full bg-[#7fa480] animate-pulse"></span>
+<span class="">Hợp lệ · Kết nối sẵn sàng (24ms)</span>
+</div>
+
+</div>
+<!-- Privacy & Local Storage Note -->
+
+</div>
+</div>
+<!-- Popup Footer -->
+<div class="px-4 py-3 bg-[#d3cfc1]/50 rounded-b-2xl border-t border-[rgba(8,9,9,0.08)] flex items-center justify-between font-code text-xs">
+<!-- Esc shortcut helper -->
+
+<!-- Action Buttons -->
+<div class="flex items-center gap-2">
+<button class="px-2.5 py-1 text-[#6b6755] hover:text-[#080909] hover:bg-black/5 rounded-lg font-bold text-[11px] tracking-wide transition-colors" type="button">
+          Khôi phục mặc định
+        </button>
+<button class="px-3.5 py-1.5 bg-[#7fa480] hover:bg-[#7fa480]/90 text-[#080909] font-bold rounded-lg transition-colors flex items-center gap-1 tracking-wide shadow-sm text-xs" type="button">
+<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+<path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"></path>
+</svg>
+          Lưu cấu hình
+        </button>
+</div>
+</div>
+</section>
+<!-- END: ActivePopupSettingsWindow -->
+</div>
+<!-- END: CentralShowcaseContainer -->
+<!-- BEGIN: FeatureSummaryCards -->
+<footer class="w-full grid grid-cols-1 md:grid-cols-3 gap-5" data-purpose="bottom-feature-cards">
+<!-- Card 1: Target Language & Always on Top -->
+<article class="bg-[#f4f1e7] rounded-2xl p-5 border border-[rgba(8,9,9,0.08)] shadow-xs hover:border-[#7fa480]/60 transition-colors">
+<h2 class="font-code text-xs font-bold uppercase tracking-wider text-[#080909] mb-2 flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-[#7fa480] inline-block"></span>
+      1. NGÔN NGỮ ĐÍCH &amp; GHIM POPUP
+    </h2>
+<p class="text-[#6b6755] text-xs sm:text-sm leading-relaxed">
+      Giữ nguyên các thiết lập cốt lõi: chọn ngôn ngữ dịch thuận tiện và chế độ Always-on-top giúp tra cứu không bị gián đoạn.
+    </p>
+</article>
+<!-- Card 2: AI Key BYOK -->
+<article class="bg-[#f4f1e7] rounded-2xl p-5 border border-[rgba(8,9,9,0.08)] shadow-xs hover:border-[#7fa480]/60 transition-colors">
+<h2 class="font-code text-xs font-bold uppercase tracking-wider text-[#080909] mb-2 flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-[#7fa480] inline-block"></span>
+      2. TÍCH HỢP AI KEY (BYOK)
+    </h2>
+<p class="text-[#6b6755] text-xs sm:text-sm leading-relaxed">
+      Hỗ trợ nhập trực tiếp API key riêng của OpenAI, Gemini, Claude hoặc DeepSeek, tối ưu hóa chi phí và tốc độ dịch theo ý muốn.
+    </p>
+</article>
+<!-- Card 3: Security & Local Storage -->
+<article class="bg-[#f4f1e7] rounded-2xl p-5 border border-[rgba(8,9,9,0.08)] shadow-xs hover:border-[#7fa480]/60 transition-colors">
+<h2 class="font-code text-xs font-bold uppercase tracking-wider text-[#080909] mb-2 flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-[#7fa480] inline-block"></span>
+      3. BẢO MẬT &amp; LƯU CỤC BỘ
+    </h2>
+<p class="text-[#6b6755] text-xs sm:text-sm leading-relaxed">
+      Toàn bộ API key được lưu trực tiếp trong Keychain / Local Storage trên máy, đảm bảo an toàn tuyệt đối và riêng tư.
+    </p>
+</article>
+</footer>
+<!-- END: FeatureSummaryCards -->
+</div>
+<!-- END: PageWrapper -->
+
+
+
+
+</body></html>

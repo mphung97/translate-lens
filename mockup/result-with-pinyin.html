@@ -1,0 +1,596 @@
+<!DOCTYPE html><html lang="vi" style=""><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Translate Lens — Result with Original, Pinyin &amp; Translation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&amp;family=Space+Grotesk:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-color: #eeebe2;
+    --main-color: #080909;
+    --caret-color: #7fa480;
+    --sub-color: #99947f;
+    --sub-alt-color: #d3cfc1;
+    --text-color: #080909;
+    --error-color: #c87e74;
+    --error-extra-color: #a56961;
+
+    --bg: #eeebe2;
+    --main: #080909;
+    --caret: #7fa480;
+    --caret-deep: #55765c;
+    --sub: #99947f;
+    --sub-alt: #d3cfc1;
+    --error: #c87e74;
+    --ink: #6b6755;
+    --chip: #59553f;
+    --hair: rgba(8,9,9,.08);
+    --panel: #f4f1e7;
+    --paper: #f7f5ec;
+    --desk: #ece8da;
+
+    --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    --sans: "Space Grotesk", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--main);
+    font: 15px/1.5 var(--sans);
+    -webkit-font-smoothing: antialiased;
+    padding: 40px 20px 80px;
+  }
+
+  .wrap { max-width: 960px; margin: 0 auto; }
+
+  .header {
+    text-align: center;
+    margin-bottom: 40px;
+  }
+  .header .over {
+    margin: 0;
+    font: 600 11px var(--mono);
+    letter-spacing: .28em;
+    text-transform: uppercase;
+    color: var(--ink);
+  }
+  .header h1 {
+    margin: 12px 0 8px;
+    font: 800 36px/1.1 var(--mono);
+    letter-spacing: -.02em;
+  }
+  .header p {
+    margin: 0 auto;
+    max-width: 60ch;
+    font: 400 14px/1.6 var(--sans);
+    color: var(--ink);
+  }
+
+  /* Desktop preview stage */
+  .stage {
+    position: relative;
+    background: var(--desk);
+    border: 1px solid rgba(8,9,9,.08);
+    border-radius: 20px;
+    padding: 60px 24px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 20px 50px -25px rgba(8,9,9,.25);
+    overflow: hidden;
+  }
+
+  /* Background deco cards */
+  .bg-card {
+    position: absolute;
+    background: #f8f5ec;
+    border: 1px solid rgba(8,9,9,.06);
+    border-radius: 12px;
+    box-shadow: 0 16px 32px -20px rgba(8,9,9,.25);
+    padding: 18px 20px;
+    pointer-events: none;
+  }
+  .bg-card.c1 { left: 4%; top: 40px; width: 220px; transform: rotate(-3deg); }
+  .bg-card.c2 { right: 4%; bottom: 40px; width: 230px; transform: rotate(2deg); }
+  .bg-line { height: 7px; border-radius: 4px; background: rgba(8,9,9,.12); margin: 9px 0; }
+  .bg-title { height: 9px; width: 50%; border-radius: 5px; background: rgba(8,9,9,.18); margin: 0 0 12px; }
+
+  /* Lens popup */
+  .lupa {
+    width: 440px;
+    max-width: 100%;
+    background: var(--bg);
+    border: 1px solid rgba(8,9,9,.12);
+    border-radius: 16px;
+    overflow: hidden;
+    font-family: var(--mono);
+    box-shadow: 0 32px 75px -20px rgba(8,9,9,.42), 0 10px 25px -8px rgba(8,9,9,.18);
+    position: relative;
+    z-index: 2;
+  }
+
+  /* Toolbar */
+  .tb {
+    height: 42px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 10px 0 12px;
+    background: var(--sub-alt);
+    border-bottom: 1px solid rgba(8,9,9,.08);
+    user-select: none;
+  }
+  .grip {
+    display: grid;
+    grid-template-columns: repeat(2, 3px);
+    grid-template-rows: repeat(3, 3px);
+    gap: 3px;
+  }
+  .grip i { background: rgba(8,9,9,.32); border-radius: 50%; }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font: 600 10.5px/1 var(--mono);
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--main);
+  }
+  .bdot { width: 7px; height: 7px; border-radius: 50%; background: var(--caret); }
+  .tbsp { flex: 1; }
+
+  .mode-switch {
+    display: flex;
+    background: rgba(8,9,9,.07);
+    border-radius: 7px;
+    padding: 2px;
+  }
+  .mode-btn {
+    width: 25px;
+    height: 23px;
+    border: 0;
+    border-radius: 5px;
+    background: transparent;
+    color: var(--ink);
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+  }
+  .mode-btn svg { width: 13px; height: 13px; }
+  .mode-btn.on { background: var(--caret); color: #080909; }
+
+  .tbtn {
+    width: 27px;
+    height: 27px;
+    border: 0;
+    background: transparent;
+    border-radius: 7px;
+    color: var(--ink);
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+  }
+  .tbtn svg { width: 14.5px; height: 14.5px; }
+
+  /* Content body */
+  .feature {
+    padding: 15px 16px 16px;
+    background: var(--bg);
+    position: relative;
+  }
+
+  /* Status and tag */
+  .status-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+  .chips {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .chip {
+    font: 600 8.5px/1 var(--mono);
+    letter-spacing: .15em;
+    text-transform: uppercase;
+    color: var(--chip);
+    background: var(--sub-alt);
+    padding: 5px 9px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .chip.ok {
+    color: #446449;
+    background: rgba(127,164,128,.22);
+  }
+  .chip.ok i {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--caret);
+  }
+  .action-audio {
+    background: transparent;
+    border: none;
+    color: var(--ink);
+    cursor: pointer;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font: 600 9.5px var(--mono);
+    border-radius: 6px;
+  }
+  .action-audio:hover {
+    color: var(--main);
+    background: rgba(8,9,9,.05);
+  }
+  .action-audio svg { width: 13px; height: 13px; }
+
+  /* Stack of result cards */
+  .results-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .field-card {
+    position: relative;
+    padding: 10px 12px;
+    background: var(--panel);
+    border: 1px solid rgba(8,9,9,.08);
+    border-radius: 10px;
+    transition: border-color .15s ease;
+  }
+  .field-card:hover {
+    border-color: rgba(8,9,9,.16);
+  }
+
+  .field-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 5px;
+  }
+  .field-label {
+    font: 700 8.5px var(--mono);
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--ink);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .field-label .tag-sub {
+    font-weight: 500;
+    color: var(--sub);
+    letter-spacing: 0.05em;
+  }
+
+  .field-actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .btn-mini {
+    width: 23px;
+    height: 23px;
+    border: none;
+    background: rgba(8,9,9,.06);
+    border-radius: 6px;
+    color: var(--ink);
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+    transition: background .15s, color .15s;
+  }
+  .btn-mini:hover {
+    background: rgba(8,9,9,.14);
+    color: var(--main);
+  }
+  .btn-mini svg { width: 12px; height: 12px; }
+
+  /* Original Text block */
+  .orig-text {
+    margin: 0;
+    font: 500 15px/1.65 var(--mono);
+    color: var(--main);
+    letter-spacing: 0.02em;
+  }
+
+  /* Pinyin specific styling */
+  .pinyin-card {
+    background: #fbf9f2;
+    border-left: 3px solid var(--caret);
+  }
+  .pinyin-text {
+    margin: 0;
+    font: 500 13.5px/1.65 var(--mono);
+    color: var(--caret-deep);
+    letter-spacing: 0.04em;
+  }
+
+  /* Ruby preview pill within pinyin */
+  .ruby-row {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px dashed rgba(8,9,9,.08);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 12px;
+  }
+  .ruby-item {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    font-family: var(--mono);
+  }
+  .ruby-py {
+    font: 500 9px/1.2 var(--mono);
+    color: var(--caret-deep);
+  }
+  .ruby-ch {
+    font: 600 13px/1.3 var(--mono);
+    color: var(--main);
+  }
+
+  /* Translated Text block */
+  .trans-text {
+    margin: 0;
+    font: 600 13.5px/1.7 var(--mono);
+    color: var(--main);
+  }
+
+  /* Bottom actions */
+  .footer-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 13px;
+    padding-top: 4px;
+  }
+  .hint-keys {
+    font: 400 9px var(--mono);
+    letter-spacing: .04em;
+    color: var(--ink);
+  }
+  .hint-keys kbd {
+    background: var(--sub-alt);
+    padding: 2px 5px;
+    border-radius: 4px;
+    font-weight: 600;
+  }
+
+  .btn-group {
+    display: flex;
+    gap: 8px;
+  }
+  .btn {
+    height: 30px;
+    padding: 0 13px;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    font: 700 9.5px var(--mono);
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+  }
+  .btn svg { width: 12px; height: 12px; }
+  .btn.ghost {
+    background: transparent;
+    border-color: rgba(8,9,9,.18);
+    color: var(--main);
+  }
+  .btn.ghost:hover {
+    background: rgba(8,9,9,.05);
+  }
+  .btn.primary {
+    background: var(--caret);
+    color: #080909;
+    box-shadow: 0 1px 3px rgba(8,9,9,.16);
+  }
+  .btn.primary:hover {
+    filter: brightness(0.97);
+  }
+
+  .resize-dots {
+    position: absolute;
+    right: 7px;
+    bottom: 7px;
+    display: grid;
+    grid-template-columns: repeat(2, 2.5px);
+    grid-template-rows: repeat(2, 2.5px);
+    gap: 2px;
+    opacity: .5;
+  }
+  .resize-dots i { background: rgba(8,9,9,.35); border-radius: 50%; }
+
+  /* Side-by-side comparison notes */
+  .details-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+    margin-top: 36px;
+  }
+  .detail-box {
+    background: var(--paper);
+    border: 1px solid var(--hair);
+    border-radius: 14px;
+    padding: 16px;
+  }
+  .detail-box h4 {
+    margin: 0 0 6px;
+    font: 700 11px var(--mono);
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--main);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .detail-box h4 i {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--caret);
+  }
+  .detail-box p {
+    margin: 0;
+    font: 400 12.5px/1.55 var(--sans);
+    color: var(--ink);
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <div class="header">
+    <p class="over">Translate Lens · 9009 UI Pattern</p>
+    <h1 class="">Result: Original, Pinyin &amp; Translation</h1>
+    <p class="">Giao diện hiển thị kết quả 3 tầng rõ ràng: văn bản gốc (Original), phiên âm (Pinyin kèm ký hiệu thanh điệu) và bản dịch đã xử lý (Translation).</p>
+  </div>
+
+  <div class="stage">
+    <!-- Decors -->
+    <div class="bg-card c1">
+      <div class="bg-title"></div>
+      <div class="bg-line"></div>
+      <div class="bg-line" style="width: 85%"></div>
+      <div class="bg-line" style="width: 70%"></div>
+    </div>
+    <div class="bg-card c2">
+      <div class="bg-title"></div>
+      <div class="bg-line"></div>
+      <div class="bg-line" style="width: 90%"></div>
+      <div class="bg-line" style="width: 65%"></div>
+    </div>
+
+    <!-- The 9009 Popup with 3 Sections -->
+    <div class="lupa">
+      <!-- Toolbar -->
+      
+
+      <!-- Main Feature Surface -->
+      <div class="feature">
+        <!-- Status & Audio -->
+        <div class="status-row">
+          <div class="chips">
+            <span class="chip ok"><i></i>Detected · ZH</span>
+            <span class="chip">ZH → VI</span>
+          </div>
+          
+        </div>
+
+        <!-- 3 Layers: Original, Pinyin, Translated -->
+        <div class="results-stack">
+
+          <!-- 1. ORIGINAL TEXT -->
+          <div class="field-card">
+            <div class="field-head">
+              <span class="field-label">Original <span class="tag-sub">· 中文</span></span>
+              <div class="field-actions">
+                <button class="btn-mini" title="Copy original">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"></rect><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path></svg>
+                </button>
+              </div>
+            </div>
+            <p class="orig-text">学而时习之，不亦说乎？</p>
+          </div>
+
+          <!-- 2. PINYIN PHONETICS -->
+          <div class="field-card pinyin-card">
+            <div class="field-head">
+              <span class="field-label">Pinyin <span class="tag-sub">· Bính âm</span></span>
+              <div class="field-actions">
+                <button class="btn-mini" title="Copy pinyin">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"></rect><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path></svg>
+                </button>
+              </div>
+            </div>
+            <p class="pinyin-text">xué ér shí xí zhī, bù yì yuè hū?</p>
+            
+            <!-- Interlinear word-by-word alignment -->
+            <div class="ruby-row">
+              <div class="ruby-item"><span class="ruby-py">xué</span><span class="ruby-ch">学</span></div>
+              <div class="ruby-item"><span class="ruby-py">ér</span><span class="ruby-ch">而</span></div>
+              <div class="ruby-item"><span class="ruby-py">shí</span><span class="ruby-ch">时</span></div>
+              <div class="ruby-item"><span class="ruby-py">xí</span><span class="ruby-ch">习</span></div>
+              <div class="ruby-item"><span class="ruby-py">zhī</span><span class="ruby-ch">之</span></div>
+              <div class="ruby-item"><span class="ruby-py">,</span><span class="ruby-ch">，</span></div>
+              <div class="ruby-item"><span class="ruby-py">bù</span><span class="ruby-ch">不</span></div>
+              <div class="ruby-item"><span class="ruby-py">yì</span><span class="ruby-ch">亦</span></div>
+              <div class="ruby-item"><span class="ruby-py">yuè</span><span class="ruby-ch">说</span></div>
+              <div class="ruby-item"><span class="ruby-py">hū</span><span class="ruby-ch">乎</span></div>
+              <div class="ruby-item"><span class="ruby-py">?</span><span class="ruby-ch">？</span></div>
+            </div>
+          </div>
+
+          <!-- 3. TRANSLATED TEXT -->
+          <div class="field-card">
+            <div class="field-head">
+              <span class="field-label">Translation <span class="tag-sub">· Tiếng Việt</span></span>
+              <div class="field-actions">
+                <button class="btn-mini" title="Copy translation">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"></rect><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path></svg>
+                </button>
+              </div>
+            </div>
+            <p class="trans-text">Học mà thường xuyên ôn tập luyện tập, chẳng phải vui mừng lắm sao?</p>
+          </div>
+
+        </div>
+
+        <!-- Footer Bar -->
+        <div class="footer-actions">
+          <span class="hint-keys"><kbd>Esc</kbd> đóng</span>
+          <div class="btn-group">
+            <button class="btn ghost">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path><path d="M21 3v5h-5"></path><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path><path d="M8 16H3v5"></path></svg>
+              Quét lại
+            </button>
+            
+          </div>
+        </div>
+
+        <span class="resize-dots"><i></i><i></i><i></i><i></i></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Design Annotations -->
+  <div class="details-grid">
+    <div class="detail-box">
+      <h4 class=""><i></i>1. Original Text</h4>
+      <p class="">Giữ nguyên chữ Hán gốc trên thẻ panel riêng, hỗ trợ copy nhanh hoặc chỉnh sửa nếu hệ thống OCR nhận diện sót ký tự.</p>
+    </div>
+    <div class="detail-box">
+      <h4 class=""><i></i>2. Pinyin &amp; Ruby Tag</h4>
+      <p class="">Thẻ Pinyin nổi bật với vạch màu xanh <code>--caret</code> đặc trưng 9009, kèm bảng ánh xạ từng chữ Hán với phiên âm tương ứng phía dưới.</p>
+    </div>
+    <div class="detail-box">
+      <h4 class=""><i></i>3. Translation</h4>
+      <p class="">Bản dịch tiếng Việt được in đậm rõ nét trên cùng mặt giấy panel, kèm nút copy độc lập và nút "Copy tất cả" ở góc dưới.</p>
+    </div>
+  </div>
+
+</div>
+
+
+
+
+
+
+
+</body></html>

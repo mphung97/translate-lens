@@ -1,0 +1,683 @@
+<!DOCTYPE html><html lang="vi" style=""><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Translate Lens — OCR &amp; Image Upload / Clipboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&amp;family=Space+Grotesk:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+  /* ============ Monkeytype 9009 tokens ============ */
+  :root {
+    --bg-color: #eeebe2;
+    --main-color: #080909;
+    --caret-color: #7fa480;
+    --caret-deep: #55765c;
+    --sub-color: #99947f;
+    --sub-alt-color: #d3cfc1;
+    --text-color: #080909;
+    --error-color: #c87e74;
+    --error-extra-color: #a56961;
+
+    --bg: #eeebe2;
+    --main: #080909;
+    --caret: #7fa480;
+    --sub: #99947f;
+    --sub-alt: #d3cfc1;
+    --ink: #6b6755;
+    --chip: #59553f;
+    --hair: rgba(8,9,9,.08);
+    --panel: #f4f1e7;
+    --paper: #f7f5ec;
+    --desk: #ece8da;
+
+    --mono: "JetBrains Mono", ui-monospace, monospace;
+    --sans: "Space Grotesk", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--main);
+    font: 14px/1.5 var(--sans);
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 24px;
+  }
+
+  .canvas-wrapper {
+    max-width: 1040px;
+    width: 100%;
+    margin: 0 auto;
+  }
+
+  /* Header showcase */
+  .header {
+    text-align: center;
+    margin-bottom: 36px;
+  }
+  .over {
+    font: 600 11px var(--mono);
+    letter-spacing: .28em;
+    text-transform: uppercase;
+    color: var(--ink);
+    margin: 0 0 10px;
+  }
+  .title {
+    font: 800 38px/1.15 var(--mono);
+    letter-spacing: -.03em;
+    color: var(--main);
+    margin: 0 0 12px;
+  }
+  .subtitle {
+    font: 400 14px/1.6 var(--sans);
+    color: var(--ink);
+    max-width: 580px;
+    margin: 0 auto;
+  }
+
+  /* Simulated desktop container */
+  .desk-surface {
+    position: relative;
+    background: var(--desk);
+    border: 1px solid rgba(8,9,9,.07);
+    border-radius: 24px;
+    padding: 56px 32px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: inset 0 2px 10px rgba(8,9,9,.03);
+    overflow: hidden;
+  }
+
+  /* Background decorative floating docs */
+  .ghost-doc {
+    position: absolute;
+    background: #f8f5ec;
+    border: 1px solid rgba(8,9,9,.06);
+    border-radius: 12px;
+    box-shadow: 0 16px 32px -20px rgba(8,9,9,.25);
+    padding: 16px 20px;
+    pointer-events: none;
+    z-index: 1;
+    opacity: 0.85;
+  }
+  .ghost-doc.g1 {
+    left: 4%;
+    top: 50px;
+    width: 210px;
+    transform: rotate(-3deg);
+  }
+  .ghost-doc.g2 {
+    right: 4%;
+    bottom: 60px;
+    width: 230px;
+    transform: rotate(2.5deg);
+  }
+  .ghost-line {
+    height: 7px;
+    border-radius: 4px;
+    background: rgba(8,9,9,.10);
+    margin: 8px 0;
+  }
+  .ghost-bar {
+    height: 9px;
+    width: 45%;
+    border-radius: 5px;
+    background: rgba(8,9,9,.16);
+    margin-bottom: 12px;
+  }
+
+  /* Main Popup window (Lens 9009 UI) */
+  .lens-popup {
+    position: relative;
+    z-index: 5;
+    width: 460px;
+    background: var(--bg);
+    border: 1px solid rgba(8,9,9,.14);
+    border-radius: 18px;
+    overflow: hidden;
+    font-family: var(--mono);
+    box-shadow: 0 32px 75px -20px rgba(8,9,9,.38), 0 10px 24px -10px rgba(8,9,9,.18);
+  }
+
+  /* Top Toolbar */
+  .tb {
+    height: 44px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 12px;
+    background: var(--sub-alt);
+    border-bottom: 1px solid rgba(8,9,9,.09);
+    user-select: none;
+  }
+  .grip {
+    display: grid;
+    grid-template-columns: repeat(2, 3.5px);
+    grid-template-rows: repeat(3, 3.5px);
+    gap: 3px;
+    cursor: grab;
+  }
+  .grip i {
+    background: rgba(8,9,9,.32);
+    border-radius: 50%;
+  }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font: 600 11px/1 var(--mono);
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--main);
+  }
+  .bdot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--caret);
+  }
+  .tb-spacer { flex: 1; }
+
+  /* Mode Switcher Buttons */
+  .mode-seg {
+    display: flex;
+    background: rgba(8,9,9,.08);
+    border-radius: 8px;
+    padding: 2px;
+    gap: 2px;
+  }
+  .mode-btn {
+    width: 28px;
+    height: 25px;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--ink);
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+    transition: all .15s;
+  }
+  .mode-btn svg { width: 14px; height: 14px; }
+  .mode-btn.active {
+    background: var(--caret);
+    color: #080909;
+    font-weight: 700;
+  }
+  .mode-btn:hover:not(.active) {
+    background: rgba(8,9,9,.06);
+    color: var(--main);
+  }
+
+  .tbtn {
+    width: 28px;
+    height: 28px;
+    border: 0;
+    background: transparent;
+    border-radius: 7px;
+    color: var(--ink);
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+  }
+  .tbtn svg { width: 15px; height: 15px; }
+  .tbtn:hover { background: rgba(8,9,9,.06); color: var(--main); }
+
+  /* Feature container */
+  .feature-body {
+    padding: 16px 18px 18px;
+    background: var(--bg);
+  }
+
+  /* Status Header Bar */
+  .status-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+  }
+  .chips {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .chip {
+    font: 600 9px/1 var(--mono);
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--chip);
+    background: var(--sub-alt);
+    padding: 5px 9px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+  }
+  .chip.active-chip {
+    background: rgba(127,164,128,.22);
+    color: var(--caret-deep);
+  }
+  .chip.active-chip i {
+    display: inline-block;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--caret);
+    margin-right: 5px;
+  }
+  .lang-target {
+    font: 600 10px var(--mono);
+    color: var(--ink);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .lang-target span { color: var(--main); font-weight: 700; }
+
+  /* Drag & Drop OCR Upload Zone */
+  .upload-dropzone {
+    position: relative;
+    background: var(--panel);
+    border: 1.5px dashed var(--sub);
+    border-radius: 12px;
+    padding: 24px 18px;
+    text-align: center;
+    cursor: pointer;
+    transition: all .2s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
+  .upload-dropzone:hover {
+    border-color: var(--caret);
+    background: #fbf9f2;
+    box-shadow: 0 4px 16px rgba(127,164,128,.15);
+  }
+  .upload-icon-wrapper {
+    width: 50px;
+    height: 50px;
+    border-radius: 14px;
+    background: rgba(127,164,128,.16);
+    border: 1px solid rgba(127,164,128,.35);
+    display: grid;
+    place-items: center;
+    color: var(--caret-deep);
+  }
+  .upload-icon-wrapper svg {
+    width: 24px;
+    height: 24px;
+  }
+  .drop-primary-text {
+    font: 600 12.5px/1.3 var(--mono);
+    color: var(--main);
+    margin: 0;
+  }
+  .drop-secondary-text {
+    font: 400 10px/1.5 var(--mono);
+    color: var(--ink);
+    margin: 0;
+  }
+  .kbd-badge {
+    background: var(--sub-alt);
+    border: 1px solid rgba(8,9,9,.12);
+    border-radius: 5px;
+    padding: 2px 6px;
+    font-size: 9.5px;
+    font-weight: 700;
+    color: var(--chip);
+    box-shadow: 0 1px 0 rgba(8,9,9,.12);
+  }
+
+  /* Divider with label */
+  .or-divider {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 14px 0 10px;
+  }
+  .or-divider .line {
+    flex: 1;
+    height: 1px;
+    background: rgba(8,9,9,.09);
+  }
+  .or-divider span {
+    font: 600 9px var(--mono);
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--sub);
+  }
+
+  /* Quick Actions / Clipboard Quick-Detect Box */
+  .clipboard-banner {
+    background: #fffdf7;
+    border: 1px solid rgba(127,164,128,.35);
+    border-radius: 10px;
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .cb-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .cb-thumb {
+    width: 36px;
+    height: 36px;
+    border-radius: 6px;
+    background: #eee8d8;
+    border: 1px solid rgba(8,9,9,.12);
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    position: relative;
+  }
+  .cb-thumb svg { width: 16px; height: 16px; color: var(--ink); }
+  .cb-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .cb-title {
+    font: 600 11px var(--mono);
+    color: var(--main);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .cb-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--caret);
+  }
+  .cb-desc {
+    font: 400 9.5px var(--mono);
+    color: var(--ink);
+  }
+
+  .btn-paste {
+    height: 28px;
+    padding: 0 10px;
+    background: rgba(127,164,128,.20);
+    border: 1px solid rgba(127,164,128,.4);
+    border-radius: 6px;
+    font: 700 9.5px var(--mono);
+    letter-spacing: .04em;
+    color: var(--caret-deep);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    transition: all .15s;
+    white-space: nowrap;
+  }
+  .btn-paste:hover {
+    background: var(--caret);
+    color: #080909;
+  }
+
+  /* OCR Options Row */
+  .options-bar {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 12px;
+  }
+  .opt-box {
+    background: var(--panel);
+    border: 1px solid rgba(8,9,9,.08);
+    border-radius: 8px;
+    padding: 8px 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .opt-label {
+    font: 500 10px var(--mono);
+    color: var(--ink);
+  }
+  .opt-value {
+    font: 600 10px var(--mono);
+    color: var(--main);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .switch-toggle {
+    width: 26px;
+    height: 15px;
+    border-radius: 999px;
+    background: var(--caret);
+    position: relative;
+    cursor: pointer;
+  }
+  .switch-toggle i {
+    position: absolute;
+    top: 1.5px;
+    right: 2px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #fbf9f2;
+    box-shadow: 0 1px 2px rgba(8,9,9,.2);
+  }
+
+  /* Footer Action Bar */
+  .footer-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 16px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(8,9,9,.08);
+  }
+  .hint-shortcuts {
+    font: 400 9.5px var(--mono);
+    color: var(--ink);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .action-buttons {
+    display: flex;
+    gap: 8px;
+  }
+  .btn {
+    height: 32px;
+    padding: 0 14px;
+    border-radius: 8px;
+    font: 700 10.5px var(--mono);
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+  }
+  .btn.ghost {
+    background: transparent;
+    border: 1px solid rgba(8,9,9,.18);
+    color: var(--main);
+  }
+  .btn.ghost:hover {
+    background: rgba(8,9,9,.05);
+  }
+  .btn.primary {
+    background: var(--caret);
+    border: 1px solid transparent;
+    color: #080909;
+    box-shadow: 0 2px 5px rgba(8,9,9,.18);
+  }
+  .btn.primary:hover {
+    filter: brightness(0.95);
+  }
+
+  /* Information Cards below */
+  .info-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-top: 32px;
+  }
+  .info-card {
+    background: var(--paper);
+    border: 1px solid var(--hair);
+    border-radius: 16px;
+    padding: 18px 20px;
+  }
+  .info-card h4 {
+    margin: 0 0 8px;
+    font: 700 11px var(--mono);
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--caret-deep);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .info-card h4::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--caret);
+  }
+  .info-card p {
+    margin: 0;
+    font: 400 12.5px/1.65 var(--sans);
+    color: var(--ink);
+  }
+</style>
+</head>
+<body>
+
+<div class="canvas-wrapper">
+
+  <!-- Header Section -->
+  <header class="header">
+    <p class="over">Translate Lens · OCR Image Recognition</p>
+    <h1 class="title">OCR &amp; Image Upload / Clipboard</h1>
+    <p class="subtitle">Tải ảnh chụp màn hình, ảnh tài liệu hoặc nhấn dán trực tiếp từ bộ nhớ tạm (Clipboard) để trích xuất văn bản chữ Hán / đa ngôn ngữ tức thì.</p>
+  </header>
+
+  <!-- Simulated Desktop Workspace -->
+  <div class="desk-surface">
+    <!-- Decorative Document Left -->
+    <div class="ghost-doc g1">
+      <div class="ghost-bar"></div>
+      <div class="ghost-line" style="width: 100%"></div>
+      <div class="ghost-line" style="width: 82%"></div>
+      <div class="ghost-line" style="width: 90%"></div>
+      <div class="ghost-line" style="width: 65%"></div>
+    </div>
+
+    <!-- Decorative Document Right -->
+    <div class="ghost-doc g2">
+      <div class="ghost-bar" style="width: 35%"></div>
+      <div class="ghost-line" style="width: 94%"></div>
+      <div class="ghost-line" style="width: 78%"></div>
+      <div class="ghost-line" style="width: 88%"></div>
+    </div>
+
+    <!-- The 9009 Translate Lens Popup -->
+    <div class="lens-popup">
+      <!-- Toolbar -->
+      
+
+      <!-- Feature Content Area -->
+      <div class="feature-body">
+        
+        <!-- Status Row -->
+        <div class="status-row">
+          <div class="chips">
+            <span class="chip active-chip"><i></i>OCR Engine Ready</span>
+            <span class="chip">Image Mode</span>
+          </div>
+          <div class="lang-target">
+            <span class="">ZH</span> → <span class="">VI</span>
+          </div>
+        </div>
+
+        <!-- Drag & Drop Upload Zone -->
+        <div class="upload-dropzone" id="dropArea">
+          <div class="upload-icon-wrapper">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" x2="12" y1="3" y2="15"></line></svg>
+          </div>
+          <div>
+            <p class="drop-primary-text">Kéo thả ảnh vào đây hoặc bấm để chọn tệp</p>
+            <p class="drop-secondary-text" style="margin-top: 4px;">Hỗ trợ PNG, JPG, WEBP, BMP · Tự động nhận diện chữ Hán</p>
+          </div>
+          <div style="margin-top: 2px;">
+            <span class="kbd-badge">⌘ + V</span> <span style="font-size: 10px; color: var(--ink); margin-left: 4px;" class="">để dán ảnh ngay từ Clipboard</span>
+          </div>
+        </div>
+
+        <!-- Divider -->
+        <div class="or-divider">
+          <div class="line"></div>
+          <span class="">Hoặc phát hiện từ bộ nhớ tạm</span>
+          <div class="line"></div>
+        </div>
+
+        <!-- Clipboard Quick Action Strip -->
+        <div class="clipboard-banner">
+          <div class="cb-left">
+            <div class="cb-thumb">
+              <!-- Miniature scan preview representation -->
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="14" x="3" y="5" rx="2"></rect><line x1="7" x2="17" y1="9" y2="9"></line><line x1="7" x2="13" y1="13" y2="13"></line></svg>
+            </div>
+            <div class="cb-info">
+              <div class="cb-title">
+                <i class="cb-dot"></i>Ảnh vừa chụp từ màn hình
+              </div>
+              <div class="cb-desc">Clipboard (1240 × 380px) · Chứa chữ Hán</div>
+            </div>
+          </div>
+          <button class="btn-paste">
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>
+            Đọc &amp; OCR
+          </button>
+        </div>
+
+        <!-- OCR Settings / Preferences Mini-Bar -->
+        
+
+        <!-- Footer Actions Bar -->
+        
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Explanatory Feature Cards below -->
+  <div class="info-grid">
+    <div class="info-card">
+      <h4 class="">1. Tải ảnh &amp; Kéo thả</h4>
+      <p class="">Khu vực dropzone trực quan, cho phép kéo thả ảnh chụp màn hình, tài liệu sách hoặc bảng biểu có chữ Trung vào để trích xuất ký tự tức thì.</p>
+    </div>
+    <div class="info-card">
+      <h4 class="">2. Đọc nhanh từ Clipboard</h4>
+      <p class="">Tự động nhận diện ảnh vừa sao chép từ phím tắt chụp màn hình (Snipping Tool, CleanShot, ⌘+Shift+4). Người dùng chỉ cần ấn 1 nút hoặc nhấn ⌘+V.</p>
+    </div>
+    <div class="info-card">
+      <h4 class="">3. Tích hợp chuỗi kết quả 3 tầng</h4>
+      <p class="">Sau khi OCR hoàn tất, hệ thống tự động chuyển sang giao diện kết quả hiển thị Văn bản gốc (Original) + Phiên âm (Pinyin) + Bản dịch (Translation).</p>
+    </div>
+  </div>
+
+</div>
+
+
+
+
+
+</body></html>
