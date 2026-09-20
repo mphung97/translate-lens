@@ -48,16 +48,18 @@ Source guide: `docs/TERAX-BUILD-AND-RELEASE.md` (sections 1, 2, 4-8 apply; secti
 3. Add repo secrets: `TAURI_SIGNING_PRIVATE_KEY`, `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` — MANUAL (do at `https://github.com/mphung97/translate-lens/settings/secrets/actions`; value = contents of `~/.tauri/translate-lens.key`, password empty). Needed before CI can sign.
 4. Verify: local sign proven via `pnpm tauri build` emitting a valid `.sig` (see §2.3).
 
-## 4. Release CI — macOS + Windows, draft (~15 min) — FILE DONE, CI RUN PENDING
+## 4. Release CI — macOS + Windows, draft (~15 min) — DONE 2026-09-20
 
 New file `.github/workflows/release.yml` — CREATED 2026-09-20 (uses `actions/checkout@v4`, `pnpm/action-setup@v4`, `setup-node@v4` Node 24 + pnpm cache, `dtolnay/rust-toolchain@stable`, `tauri-apps/tauri-action@v1`):
+Fixes applied after first red runs: `packageManager: pnpm@11.5.2` (action-setup requires a version), macOS `rustup target add` step (Intel leg), job `permissions: contents: write` + repo setting flip (release creation).
+Draft contains 13 assets: `latest.json`, arm64 `.dmg` + `.app.tar.gz` + `.sig`, x64 `.dmg` + `.app.tar.gz` + `.sig`, Windows `*-setup.exe` + `.sig`, `*.msi` + `.sig`, 2× source archives.
 
 - Triggers: `push.tags: v*` + `workflow_dispatch`.
 - Matrix (3 legs): `macos-latest --target aarch64-apple-darwin`, `macos-latest --target x86_64-apple-darwin`, `windows-latest` (no args).
 - Steps per leg: checkout → pnpm setup → Node 24 + pnpm cache → Rust stable → `pnpm install --frozen-lockfile` → `tauri-apps/tauri-action@v1` with `tagName: github.ref_name`, `releaseDraft: true`.
 - Pass `TAURI_SIGNING_PRIVATE_KEY*` via `env` on the tauri-action step.
 - First run: Apple notarization + SignPath intentionally empty (unsigned draft; SmartScreen/dev warning expected).
-- Verify: manual dispatch goes green; draft release contains 2× `.dmg`, `*-setup.exe`, `*.msi`, `latest.json` + `.sig` files. PENDING — needs commit + push to `origin/main`, then `gh workflow run Release` or `git tag v0.1.0 && git push origin v0.1.0` (add secrets from §3 first).
+- Verify: manual dispatch goes green; draft release contains 2× `.dmg`, `*-setup.exe`, `*.msi`, `latest.json` + `.sig` files. DONE 2026-09-20 — all green, 13 assets. NOTE: CI created the draft under an `untagged-<sha>` tag; retarget the draft to `v0.1.0` in the UI before publishing (updater polls `releases/latest`, which only resolves to published non-draft releases).
 
 ## 5. App-version row in `ByokSettingsPanel.tsx` (~25 min) — CODE DONE, RUNTIME CHECK PENDING
 
@@ -87,8 +89,8 @@ Location: Card 1 (Core prefs), below Always-on-top switch, same row pattern — 
 
 - [x] `cargo check` + `pnpm build` pass.
 - [x] Local macOS `.dmg` + `.sig` produced (`Translate Lens_0.1.0_aarch64.dmg`, `.app.tar.gz` + `.app.tar.gz.sig`).
-- [ ] CI draft has 4 installers + valid `latest.json`. Blocked on: push to `origin/main` → add secrets (§3.3) → dispatch/tag.
-- [ ] Settings row shows version, check + install works end-to-end. Code done (`src/lib/updater.ts` + Card 1 row); needs `pnpm dev` eyeball + published release.
+- [x] CI draft has 4 installers + valid `latest.json`. Draft has 13 assets incl. `latest.json`; pending retarget to `v0.1.0` + publish.
+- [ ] Settings row shows version, check + install works end-to-end. Code done (`src/lib/updater.ts` + Card 1 row); test after publish: install 0.1.0 dmg, bump to 0.1.1, publish, press check.
 
 Known pre-existing issue (not from this work): `pnpm exec tsc --noEmit` fails on `tsconfig.json:18` (`"ignoreDeprecations": "6.0"` invalid for TS 5.6.2 — local WIP predates this change).
 
