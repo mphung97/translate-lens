@@ -4,13 +4,10 @@ import type { TranslateResult } from "@/lib/translate";
 
 export type TranslationOrigin = "upload" | "paste";
 
-export type OcrSource = "local" | "cloud" | null;
-
 export interface Translation {
   result: TranslateResult | null;
   origin: TranslationOrigin;
-  ocrSource: OcrSource;
-  /** Local OCR mean line confidence (0..1). Null for cloud/paste paths. */
+  /** Local OCR mean line confidence (0..1). Null for paste path. */
   ocrScore: number | null;
 }
 
@@ -19,7 +16,6 @@ interface TranslationStore {
   setTranslationResult: (
     result: TranslateResult,
     origin: TranslationOrigin,
-    ocrSource?: OcrSource,
     ocrScore?: number | null,
   ) => void;
 }
@@ -30,14 +26,13 @@ export const TranslationProvider: ParentComponent = (props) => {
   const [translation, setTranslation] = createStore<Translation>({
     result: null,
     origin: "upload",
-    ocrSource: null,
     ocrScore: null,
   });
 
   const store: TranslationStore = {
     translation,
-    setTranslationResult: (result, origin, ocrSource = null, ocrScore = null) =>
-      setTranslation({ result, origin, ocrSource, ocrScore }),
+    setTranslationResult: (result, origin, ocrScore = null) =>
+      setTranslation({ result, origin, ocrScore }),
   };
 
   return (

@@ -1,5 +1,7 @@
 # Building and Releasing a Tauri v2 App (Reusable Guide)
 
+> Status: **DOCS ONLY — DO NOT IMPLEMENT**. Reference guide, not a task.
+
 > Reference doc only — researched from the Terax repo, kept for guidance. App-specific steps live in `updater-implementation-plan.md`.
 
 Researched from this repo (`terax-ai` / `Terax`, Tauri v2 + Vite + React + pnpm + Rust workspace).

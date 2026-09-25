@@ -19,6 +19,7 @@ import {
   FALLBACK_CLIPBOARD_IMAGE_ERROR,
   FALLBACK_UPLOAD_ERROR,
   OCR_MIN_SCORE,
+  OCR_UNREADABLE_ERROR,
   ROUTES,
 } from "@/constants";
 
@@ -38,43 +39,30 @@ export default function OcrUploadPanel() {
 
   async function runOcrTranslate(prepared: PreparedImage): Promise<{
     result: TranslateResult;
-    ocrSource: "local" | "cloud";
-    ocrScore: number | null;
+    ocrScore: number;
   }> {
     const provider = prefs.preferences().byokProvider;
     const { apiKey } = resolveCredentials(prefs.apiKeys(), provider);
     const targetLanguage = prefs.preferences().targetLanguage;
 
-    // Local first (awaits init when the user clicks before ready),
-    // cloud vision fallback when recognition is weak or empty.
-    try {
-      const local = await recognizeLocal(prepared.bytes, prepared.mediaType);
-      console.info("[ocr]", {
-        avgScore: local.avgScore,
-        minScore: local.minScore,
-        lineCount: local.lineCount,
-      });
-      if (local.text.trim() && local.avgScore >= OCR_MIN_SCORE) {
-        const result = await translate({
-          text: local.text,
-          targetLanguage,
-          provider,
-          apiKey,
-        });
-        return { result, ocrSource: "local", ocrScore: local.avgScore };
-      }
-    } catch {
-      // Fall through to cloud vision.
+    // Local-only OCR (awaits init when the user clicks before ready).
+    // Weak or empty recognition blocks with an error.
+    const local = await recognizeLocal(prepared.bytes, prepared.mediaType);
+    console.info("[ocr]", {
+      avgScore: local.avgScore,
+      minScore: local.minScore,
+      lineCount: local.lineCount,
+    });
+    if (!local.text.trim() || local.avgScore < OCR_MIN_SCORE) {
+      throw new TranslateError(OCR_UNREADABLE_ERROR, "INVALID_RESPONSE");
     }
-
     const result = await translate({
-      imageData: prepared.bytes,
-      imageMediaType: prepared.mediaType,
+      text: local.text,
       targetLanguage,
       provider,
       apiKey,
     });
-    return { result, ocrSource: "cloud", ocrScore: null };
+    return { result, ocrScore: local.avgScore };
   }
 
   async function runAndNavigate(
@@ -85,8 +73,8 @@ export default function OcrUploadPanel() {
     setState({ busy: true, error: "" });
     try {
       const prepared = await getPrepared();
-      const { result, ocrSource, ocrScore } = await runOcrTranslate(prepared);
-      t.setTranslationResult(result, "upload", ocrSource, ocrScore);
+      const { result, ocrScore } = await runOcrTranslate(prepared);
+      t.setTranslationResult(result, "upload", ocrScore);
       navigate(ROUTES.result);
     } catch (e) {
       setState({

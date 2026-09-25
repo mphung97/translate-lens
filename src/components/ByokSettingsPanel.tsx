@@ -560,9 +560,6 @@ export default function ByokSettingsPanel() {
             <span>
               Text: <strong class={cn(["text-main"])}>{active().models.text}</strong>
             </span>
-            <span>
-              Ảnh: <strong class={cn(["text-main"])}>{active().models.image}</strong>
-            </span>
           </span>
           <span class={cn(["text-[10px] font-semibold", "text-caret-deep"])}>
             {active().note}

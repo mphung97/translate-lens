@@ -26,7 +26,7 @@ Clipboard-first OCR + text translation in a 500px popup. Bring your own key. No 
 
 | | What you get |
 |---|---|
-| 📋 **Clipboard OCR** | Screenshot → `⌘V` → translated. Reads PNG / JPG / WEBP / BMP from clipboard, auto-prepares image (resize, JPEG fallback) before sending to vision model. |
+| 📋 **Clipboard OCR** | Screenshot → `⌘V` → translated. Reads PNG / JPG / WEBP / BMP from clipboard, auto-prepares image (resize, JPEG fallback) before local PaddleOCR + text model translate. |
 | ⌨️ **Manual mode** | Type or paste up to 2,000 chars. `⌘ + ↵` to translate. Char counter, quick-paste, one-click clear. |
 | 🈳 **Pinyin included** | Chinese input automatically returns pinyin alongside original + translation. |
 | 🔑 **BYOK, your keys stay yours** | Groq or OpenRouter. Keys stored in OS Keychain via Tauri secrets plugin — never in code, never on a server. |
@@ -37,7 +37,7 @@ Clipboard-first OCR + text translation in a 500px popup. Bring your own key. No 
 ## 🖥️ How It Works
 
 ```
-1. Upload  →  drop image / ⌘V clipboard image  →  vision model OCR + translate
+1. Upload  →  drop image / ⌘V clipboard image  →  local OCR + text model translate
 2. Paste   →  type / paste text                →  text model translate
 3. Result  →  Original · Pinyin (if ZH) · Translation — each with copy button
 ```
@@ -46,10 +46,10 @@ Default flow is **Chinese → Vietnamese** (`ZH → VI`), tuned for fast reading
 
 ### AI models (per provider)
 
-| Provider | Text | Image / Vision |
-|----------|------|----------------|
-| **Groq** _(default)_ | `openai/gpt-oss-120b` | `qwen/qwen3.8-27b` |
-| **OpenRouter** | `qwen/qwen-3-32b` | `qwen/qwen2.5-vl-32b-instruct` |
+| Provider | Text |
+|----------|------|
+| **Groq** _(default)_ | `openai/gpt-oss-120b` |
+| **OpenRouter** | `qwen/qwen-3-32b` |
 
 Structured JSON output via `ai` SDK + Zod: `detectedLanguage`, `detectedText`, `translatedText`, `pinyin`.
 

@@ -1,5 +1,7 @@
 # Hybrid Local OCR Plan (Option A Locked)
 
+> Status: **DONE — IMPLEMENTED**.
+
 ## Goal
 
 Run OCR on-device with `@paddleocr/paddleocr-js` (PP-OCRv5, `lang: "ch"`)

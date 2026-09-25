@@ -3,6 +3,9 @@ import { translate, TranslateError } from "./translate";
 
 vi.mock("ai", () => ({
   generateText: vi.fn(),
+  createProviderRegistry: vi.fn(() => ({
+    languageModel: vi.fn(() => "mock-model"),
+  })),
   Output: {
     object: ({ schema }: { schema: unknown }) => schema,
   },

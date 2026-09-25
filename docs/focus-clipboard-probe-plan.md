@@ -1,5 +1,7 @@
 # Focus Clipboard Probe Plan
 
+> Status: **NOT IMPLEMENTED YET**.
+
 ## Goal
 
 Detect clipboard image readiness on window focus/blur in

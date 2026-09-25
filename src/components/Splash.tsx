@@ -9,7 +9,6 @@ export default function Splash(props: ParentProps) {
   const [fraction, setFraction] = createSignal(0);
   const [stage, setStage] = createSignal("Loading local OCR…");
   const [failed, setFailed] = createSignal("");
-  const [skipped, setSkipped] = createSignal(false);
   const [retrying, setRetrying] = createSignal(false);
 
   let timer: number | undefined;
@@ -66,7 +65,7 @@ export default function Splash(props: ParentProps) {
   return (
     <>
       {props.children}
-      <Show when={visible() && !skipped()}>
+      <Show when={visible()}>
         <div
           class={cn([
             "absolute inset-0 z-50",
@@ -101,20 +100,6 @@ export default function Splash(props: ParentProps) {
                   >
                     {retrying() ? "Retrying…" : "Retry"}
                   </button>
-                  <button
-                    onClick={() => setSkipped(true)}
-                    class={cn([
-                      "h-[30px] px-[13px]",
-                      "rounded-[8px]",
-                      "bg-sub-alt",
-                      "border border-main/12",
-                      "text-[10px] font-bold",
-                      "text-chip",
-                      "cursor-pointer",
-                    ])}
-                  >
-                    Continue with cloud vision
-                  </button>
                 </div>
               </>
             }
@@ -138,19 +123,6 @@ export default function Splash(props: ParentProps) {
             <p class={cn(["m-0", "text-[10px]", "text-ink"])}>
               {stage()} {pct()}%
             </p>
-            <button
-              onClick={() => setSkipped(true)}
-              class={cn([
-                "mt-1",
-                "bg-transparent border-0",
-                "text-[10px]",
-                "text-sub",
-                "underline",
-                "cursor-pointer",
-              ])}
-            >
-              Skip — use cloud vision
-            </button>
           </Show>
         </div>
       </Show>

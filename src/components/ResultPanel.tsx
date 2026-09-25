@@ -64,16 +64,9 @@ export default function ResultPanel() {
         <>
           <div class={cn(["flex items-center justify-between", "mb-3"])}>
             <div class={cn(["flex items-center gap-1.5"])}>
-              <Show when={t.translation.ocrSource}>
-                <Badge
-                  dot
-                  variant={
-                    t.translation.ocrSource === "local" ? "success" : "neutral"
-                  }
-                >
-                  {t.translation.ocrSource === "local"
-                    ? `Local OCR${t.translation.ocrScore !== null ? ` · ${Math.round(t.translation.ocrScore * 100)}%` : ""}`
-                    : "Cloud vision"}
+              <Show when={t.translation.ocrScore !== null}>
+                <Badge dot variant="success">
+                  {`Local OCR · ${Math.round((t.translation.ocrScore ?? 0) * 100)}%`}
                 </Badge>
               </Show>
               <Badge>

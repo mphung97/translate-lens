@@ -1,20 +1,36 @@
 import { createGroq } from "@ai-sdk/groq";
 import { createOpenRouter } from "@openrouter/ai-sdk-provider";
-import type { LanguageModel } from "ai";
-import type { ByokProviderId } from "@/lib/secrets";
+import { createProviderRegistry, type LanguageModel } from "ai";
+import { BYOK_PROVIDERS } from "@/constants";
+import type { ByokProviderId, ProviderKeys } from "@/lib/secrets";
 
-type ModelFactory = (modelId: string) => LanguageModel;
+/** Default text model id for a provider (source of truth: BYOK_PROVIDERS). */
+export function defaultModelFor(provider: ByokProviderId): string {
+  return BYOK_PROVIDERS.find((p) => p.id === provider)?.models.text ?? "";
+}
 
-const CLIENTS: Record<ByokProviderId, (apiKey: string) => ModelFactory> = {
-  groq: (apiKey) => createGroq({ apiKey }),
-  openrouter: (apiKey) => createOpenRouter({ apiKey }),
-};
+/**
+ * Central provider registry for BYOK keys.
+ * The docs use a module-level singleton because keys come from env;
+ * BYOK keys arrive at runtime, so the registry is built per call —
+ * same `createProviderRegistry` API, only providers with keys included.
+ */
+export function createByokRegistry(keys: ProviderKeys) {
+  return createProviderRegistry({
+    ...(keys.groq ? { groq: createGroq({ apiKey: keys.groq }) } : {}),
+    ...(keys.openrouter
+      ? { openrouter: createOpenRouter({ apiKey: keys.openrouter }) }
+      : {}),
+  });
+}
 
-/** Build a language model for the given provider + key + model id. */
-export function getModel(
+/** Single-key shortcut for the translate call path. */
+export function getLanguageModel(
   provider: ByokProviderId,
   apiKey: string,
-  modelId: string,
+  modelId: string = defaultModelFor(provider),
 ): LanguageModel {
-  return CLIENTS[provider](apiKey)(modelId);
+  const keys: ProviderKeys = { groq: null, openrouter: null };
+  keys[provider] = apiKey;
+  return createByokRegistry(keys).languageModel(`${provider}:${modelId}`);
 }
