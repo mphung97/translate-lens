@@ -1,5 +1,7 @@
 # Updater + Release Implementation Plan (Translate Lens v2)
 
+> Status: **DONE — IMPLEMENTED**.
+
 Scope locked: macOS (arm64 + x64) + Windows CI, with in-app updater.
 Out of scope: Linux, sidecar (section 3 of TERAX-BUILD-AND-RELEASE.md), NSIS hooks, `tauri.*.conf.json` merges.
 

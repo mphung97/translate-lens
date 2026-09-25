@@ -1,8 +1,8 @@
 import { generateText, Output, type ModelMessage } from "ai";
 import { z } from "zod";
-import { DEFAULT_TARGET_LANGUAGE, BYOK_PROVIDERS } from "@/constants";
+import { DEFAULT_TARGET_LANGUAGE } from "@/constants";
 import type { ByokProviderId, ProviderKeys } from "@/lib/secrets";
-import { getModel } from "@/lib/ai";
+import { defaultModelFor, getLanguageModel } from "@/lib/ai";
 
 const translateSchema = z.object({
   detectedLanguage: z
@@ -27,8 +27,6 @@ export type TranslateResult = z.infer<typeof translateSchema>;
 
 interface TranslateInput {
   text?: string;
-  imageData?: Uint8Array;
-  imageMediaType?: string;
   targetLanguage?: string;
   provider: ByokProviderId;
   apiKey: string;
@@ -48,11 +46,6 @@ export class TranslateError extends Error {
     super(message);
     this.name = "TranslateError";
   }
-}
-
-function defaultModelFor(provider: ByokProviderId, isImage: boolean): string {
-  const models = BYOK_PROVIDERS.find((p) => p.id === provider)?.models;
-  return isImage ? (models?.image ?? "") : (models?.text ?? "");
 }
 
 function missingKeyError(provider: ByokProviderId): TranslateError {
@@ -81,11 +74,10 @@ export function resolveCredentials(keys: ProviderKeys, provider: ByokProviderId)
   return { apiKey };
 }
 
-function buildInstructions(targetLanguage: string, isImage: boolean): string {
-  const detectedTextRule = isImage
-    ? "Set detectedText to the full verbatim transcription (OCR result) of all visible text in the image."
-    : "Set detectedText to the original input text verbatim (after trimming).";
-  return `You are a professional translator. Translate ${isImage ? "all visible text in this image" : "text"} into ${targetLanguage}.
+function buildInstructions(targetLanguage: string): string {
+  const detectedTextRule =
+    "Set detectedText to the original input text verbatim (after trimming).";
+  return `You are a professional translator. Translate text into ${targetLanguage}.
 
 Rules:
 1. Detect the input language accurately.
@@ -98,8 +90,6 @@ Rules:
 
 export async function translate({
   text,
-  imageData,
-  imageMediaType = "image/png",
   targetLanguage = DEFAULT_TARGET_LANGUAGE,
   provider,
   apiKey,
@@ -107,45 +97,21 @@ export async function translate({
 }: TranslateInput): Promise<TranslateResult> {
   if (!apiKey) throw missingKeyError(provider);
 
-  const isImage = imageData !== undefined;
-  let messages: ModelMessage[];
-  let fallbackText: string;
-  let errorLabel: string;
-
-  if (isImage) {
-    if (imageData.length === 0) {
-      throw new TranslateError("Image data is empty", "EMPTY_INPUT");
-    }
-    messages = [
-      {
-        role: "user",
-        content: [
-          { type: "text", text: "Translate the text in this image." },
-          { type: "image", image: imageData, mediaType: imageMediaType },
-        ],
-      },
-    ];
-    fallbackText = "";
-    errorLabel = "Image translation failed";
-  } else {
-    const trimmed = (text ?? "").trim();
-    if (!trimmed) {
-      throw new TranslateError("Input text is empty", "EMPTY_INPUT");
-    }
-    messages = [{ role: "user", content: [{ type: "text", text: trimmed }] }];
-    fallbackText = trimmed;
-    errorLabel = "Translation failed";
+  const trimmed = (text ?? "").trim();
+  if (!trimmed) {
+    throw new TranslateError("Input text is empty", "EMPTY_INPUT");
   }
+  const messages: ModelMessage[] = [
+    { role: "user", content: [{ type: "text", text: trimmed }] },
+  ];
+  const fallbackText = trimmed;
+  const errorLabel = "Translation failed";
 
   try {
     const { output } = await generateText({
-      model: getModel(
-        provider,
-        apiKey,
-        model ?? defaultModelFor(provider, isImage),
-      ),
+      model: getLanguageModel(provider, apiKey, model ?? defaultModelFor(provider)),
       output: Output.object({ schema: translateSchema }),
-      instructions: buildInstructions(targetLanguage, isImage),
+      instructions: buildInstructions(targetLanguage),
       messages,
     });
 

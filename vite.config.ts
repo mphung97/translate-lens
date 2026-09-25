@@ -1,6 +1,7 @@
 /// <reference types="vitest/config" />
 import { defineConfig } from "vite";
-import solid from "vite-plugin-solid";
+import react, { reactCompilerPreset } from "@vitejs/plugin-react";
+import babel from "@rolldown/plugin-babel";
 import tailwindcss from "@tailwindcss/vite";
 import path from "node:path";
 
@@ -10,7 +11,13 @@ const host = process.env.TAURI_DEV_HOST;
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [tailwindcss(), solid()],
+  plugins: [
+    tailwindcss(),
+    react(),
+    babel({
+      presets: [reactCompilerPreset()],
+    }),
+  ],
 
   resolve: {
     alias: {

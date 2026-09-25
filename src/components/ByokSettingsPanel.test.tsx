@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { test, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent } from "@solidjs/testing-library";
-import { PreferencesProvider, usePreferences } from "@/stores/preferences";
+import { render, screen, fireEvent } from "@testing-library/react";
+import { usePreferencesStore } from "@/stores/preferences";
 import type { ProviderKeys } from "@/lib/secrets";
 import { getKey, setKey, getAllKeys } from "@/lib/secrets";
 import ByokSettingsPanel from "./ByokSettingsPanel";
@@ -22,24 +22,19 @@ vi.mock("@/lib/secrets", async (importOriginal) => {
   };
 });
 
-function SeedKeys(props: { keys: ProviderKeys }) {
-  const prefs = usePreferences();
-  prefs.setApiKeysInMemory(props.keys);
-  return null;
-}
-
 function setup(keys?: ProviderKeys) {
-  return render(() => (
-    <PreferencesProvider>
-      {keys && <SeedKeys keys={keys} />}
-      <ByokSettingsPanel />
-    </PreferencesProvider>
-  ));
+  usePreferencesStore.setState({
+    apiKeys: keys ?? { groq: null, openrouter: null },
+  });
+  return render(<ByokSettingsPanel />);
 }
 
 beforeEach(() => {
   vi.clearAllMocks();
   localStorage.clear();
+  usePreferencesStore.setState({
+    apiKeys: { groq: null, openrouter: null },
+  });
 });
 
 test("prefills field from memory with zero keychain reads", async () => {
@@ -53,9 +48,9 @@ test("prefills field from memory with zero keychain reads", async () => {
 test("save writes keychain once and serves later visits from memory", async () => {
   setup();
   const input = (await screen.findByPlaceholderText(/sk-/i)) as HTMLInputElement;
-  await fireEvent.input(input, { target: { value: "sk-test-123" } });
-  await fireEvent.click(screen.getByRole("button", { name: /lưu cấu hình/i }));
-  expect(await screen.findByText("Đã lưu vào Keychain")).toBeInTheDocument();
+  fireEvent.change(input, { target: { value: "sk-test-123" } });
+  fireEvent.click(screen.getByRole("button", { name: /lưu cấu hình/i }));
+  expect(await screen.findByText("Đã lưu vào Keychain")).toBeTruthy();
   expect(setKey).toHaveBeenCalledTimes(1);
   expect(getKey).not.toHaveBeenCalled();
 });

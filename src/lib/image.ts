@@ -88,7 +88,7 @@ export async function rgbaToPng(
 }
 
 /**
- * Encode a decoded image canvas for vision OCR.
+ * Encode a decoded image canvas for local OCR.
  * Small images stay PNG (sharp Hanzi), large images become JPEG.
  */
 export async function encodeCanvas(
@@ -134,7 +134,7 @@ export async function encodeCanvas(
 }
 
 /**
- * Downscale / re-encode clipboard RGBA for vision OCR.
+ * Downscale / re-encode clipboard RGBA for local OCR.
  * Small images stay PNG (sharp Hanzi), large images become JPEG.
  */
 export async function prepareImageForOcr(

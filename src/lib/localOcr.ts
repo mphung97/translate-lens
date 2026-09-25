@@ -1,5 +1,5 @@
 /**
- * On-device OCR via `@paddleocr/paddleocr-js` (PP-OCRv5, lang "ch").
+ * On-device OCR via `@paddleocr/paddleocr-js` (PP-OCRv6_small).
  *
  * Lazy singleton: the SDK (onnxruntime + opencv) is dynamically imported
  * so `pnpm build` / vitest never pay the cost until first use.
@@ -55,8 +55,10 @@ let status: LocalOcrStatus = "idle";
 let lastError = "";
 let readyPromise: Promise<OcrInstance | null> | null = null;
 const listeners = new Set<(p: LocalOcrProgress) => void>();
+let lastProgress: LocalOcrProgress = { fraction: 0, stage: "Loading local OCR…" };
 
 function emit(p: LocalOcrProgress) {
+  lastProgress = p;
   for (const cb of listeners) {
     try {
       cb(p);
@@ -71,6 +73,11 @@ export function onOcrProgress(cb: (p: LocalOcrProgress) => void): () => void {
   return () => {
     listeners.delete(cb);
   };
+}
+
+/** Snapshot getter for `useSyncExternalStore` subscriptions. */
+export function getOcrProgress(): LocalOcrProgress {
+  return lastProgress;
 }
 
 export function ocrStatus(): LocalOcrStatus {
@@ -96,8 +103,8 @@ async function createInstance(): Promise<OcrInstance> {
       ? Math.min(4, Math.max(1, (navigator.hardwareConcurrency || 2) - 1))
       : 1;
   const ocr = (await PaddleOCR.create({
-    lang: "ch",
-    ocrVersion: "PP-OCRv5",
+    textDetectionModelName: "PP-OCRv6_small_det",
+    textRecognitionModelName: "PP-OCRv6_small_rec",
     worker: false,
     ortOptions: {
       backend: "wasm",
@@ -112,7 +119,7 @@ async function createInstance(): Promise<OcrInstance> {
 
 /**
  * Resolve the shared OCR instance. Returns null (never throws) when
- * local OCR is unavailable — callers fall back to cloud vision.
+ * local OCR is unavailable — callers surface an error instead.
  * Concurrent callers share one init.
  */
 export function readyOcr(): Promise<OcrInstance | null> {

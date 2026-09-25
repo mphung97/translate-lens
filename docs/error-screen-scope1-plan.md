@@ -1,5 +1,7 @@
 # Error Screen Scope 1 Plan
 
+> Status: **NOT IMPLEMENTED YET**.
+
 ## Goal
 
 One global crash screen for render-blocking failures. No per-error pages.

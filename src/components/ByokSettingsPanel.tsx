@@ -1,13 +1,6 @@
-import { Button } from "@kobalte/core/button";
-import { Select } from "@kobalte/core/select";
-import { Separator } from "@kobalte/core/separator";
-import { Switch } from "@kobalte/core/switch";
-import { TextField } from "@kobalte/core/text-field";
-import { ToggleGroup } from "@kobalte/core/toggle-group";
-import { Tooltip } from "@kobalte/core/tooltip";
-import { Check, ChevronDown, Eye, EyeOff } from "lucide-solid";
-import { onMount, Show } from "solid-js";
-import { createStore } from "solid-js/store";
+import { useEffect, useState } from "react";
+import * as Tooltip from "@radix-ui/react-tooltip";
+import { Check, ChevronDown, Eye, EyeOff } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { setAlwaysOnTop, isAlwaysOnTop } from "@/lib/window";
 import {
@@ -50,7 +43,7 @@ const IDLE: ByokStatus = IDLE_BYOK_STATUS;
 
 export default function ByokSettingsPanel() {
   const prefs = usePreferences();
-  const [state, setState] = createStore<ByokState>({
+  const [state, setState] = useState<ByokState>({
     provider: prefs.preferences().byokProvider,
     apiKey: "",
     savedKey: "",
@@ -66,204 +59,165 @@ export default function ByokSettingsPanel() {
     latestVersion: "",
   });
 
-  const dirty = () => state.apiKey !== state.savedKey;
+  const dirty = state.apiKey !== state.savedKey;
 
   function loadProvider(p: ByokProviderId) {
     const k = prefs.apiKeys()[p];
-    setState({ apiKey: k ?? "", savedKey: k ?? "", status: IDLE });
+    setState((s) => ({ ...s, apiKey: k ?? "", savedKey: k ?? "", status: IDLE }));
   }
 
   function refreshPresence() {
     const all = prefs.apiKeys();
-    setState({
+    setState((s) => ({
+      ...s,
       hasStored: {
         groq: !!all.groq,
         openrouter: !!all.openrouter,
       },
-    });
+    }));
   }
 
   function selectProvider(p: ByokProviderId) {
     if (p === state.provider) return;
-    setState({ provider: p, revealed: false });
+    setState((s) => ({ ...s, provider: p, revealed: false }));
     prefs.setByokProvider(p);
-    loadProvider(p);
+    const k = prefs.apiKeys()[p];
+    setState((s) => ({ ...s, apiKey: k ?? "", savedKey: k ?? "", status: IDLE }));
   }
 
   function editKey(v: string) {
-    setState({ apiKey: v, status: IDLE });
+    setState((s) => ({ ...s, apiKey: v, status: IDLE }));
   }
 
   function toggleRevealed() {
-    setState("revealed", (v) => !v);
+    setState((s) => ({ ...s, revealed: !s.revealed }));
   }
 
   async function handleSave() {
     const p = state.provider;
-    setState({ busy: true });
+    setState((s) => ({ ...s, busy: true }));
     try {
       const trimmed = state.apiKey.trim();
       if (trimmed) {
         await setKey(p, trimmed);
         prefs.setApiKeysInMemory({ ...prefs.apiKeys(), [p]: trimmed });
-        setState({
+        setState((s) => ({
+          ...s,
           savedKey: trimmed,
           status: { kind: "ok", msg: "Đã lưu vào Keychain" },
-        });
-        setState("hasStored", p, true);
+          hasStored: { ...s.hasStored, [p]: true },
+        }));
       } else {
         await clearKey(p);
         prefs.setApiKeysInMemory({ ...prefs.apiKeys(), [p]: null });
-        setState({
+        setState((s) => ({
+          ...s,
           savedKey: "",
           status: { kind: "ok", msg: "Đã xóa key khỏi Keychain" },
-        });
-        setState("hasStored", p, false);
+          hasStored: { ...s.hasStored, [p]: false },
+        }));
       }
     } catch (e) {
-      setState({ status: { kind: "err", msg: String(e) } });
+      setState((s) => ({ ...s, status: { kind: "err", msg: String(e) } }));
     } finally {
-      setState({ busy: false });
+      setState((s) => ({ ...s, busy: false }));
     }
-  }
-
-  function handleTest() {
-    const k = prefs.apiKeys()[state.provider];
-    if (k && k === state.apiKey.trim()) {
-      setState({ status: { kind: "ok", msg: "Hợp lệ · khớp với key đã lưu" } });
-    } else if (k) {
-      setState({ status: { kind: "err", msg: "Key hiển thị khác key đã lưu — hãy Lưu lại" } });
-    } else {
-      setState({ status: { kind: "err", msg: "Chưa có key trong Keychain — hãy Lưu trước" } });
-    }
-  }
-
-  async function handleReset() {
-    prefs.reset();
-    const p = state.provider;
-    await clearKey(p);
-    prefs.setApiKeysInMemory({ ...prefs.apiKeys(), [p]: null });
-    setState({ apiKey: "", savedKey: "", status: IDLE });
-    setState("hasStored", p, false);
   }
 
   async function handleAlwaysOnTop(v: boolean) {
-    setState({ alwaysOnTop: v });
+    setState((s) => ({ ...s, alwaysOnTop: v }));
     try {
       await setAlwaysOnTop(v);
     } catch (e) {
-      setState({ alwaysOnTop: !v, status: { kind: "err", msg: String(e) } });
+      setState((s) => ({ ...s, alwaysOnTop: !v, status: { kind: "err", msg: String(e) } }));
     }
   }
 
   async function loadVersion() {
     try {
-      setState({ version: await getAppVersion() });
+      setState((s) => ({ ...s, version: "loading" }));
+      const v = await getAppVersion();
+      setState((s) => ({ ...s, version: v }));
     } catch {
-      setState({ version: "0.1.0" });
+      setState((s) => ({ ...s, version: "0.1.0" }));
     }
   }
 
   async function handleCheck() {
     if (state.updateBusy) return;
-    setState({ updateBusy: true, updateMsg: "" });
+    setState((s) => ({ ...s, updateBusy: true, updateMsg: "" }));
     try {
       const r = await checkForUpdate();
       if (r.available) {
-        setState({
+        setState((s) => ({
+          ...s,
           updateAvailable: true,
           latestVersion: r.version ?? "",
           updateMsg: `Có bản mới v${r.version ?? ""}`,
-        });
+        }));
       } else {
-        setState({ updateAvailable: false, updateMsg: "Đã là bản mới nhất" });
+        setState((s) => ({ ...s, updateAvailable: false, updateMsg: "Đã là bản mới nhất" }));
       }
     } catch (e) {
-      setState({ updateMsg: String(e) });
+      setState((s) => ({ ...s, updateMsg: String(e) }));
     } finally {
-      setState({ updateBusy: false });
+      setState((s) => ({ ...s, updateBusy: false }));
     }
   }
 
   async function handleInstall() {
     if (state.updateBusy) return;
-    setState({ updateBusy: true, updateMsg: "" });
+    setState((s) => ({ ...s, updateBusy: true, updateMsg: "" }));
     try {
       const ok = await installAndRelaunch();
-      if (!ok) setState({ updateAvailable: false, updateMsg: "Đã là bản mới nhất" });
+      if (!ok) setState((s) => ({ ...s, updateAvailable: false, updateMsg: "Đã là bản mới nhất" }));
     } catch (e) {
-      setState({ updateMsg: String(e) });
+      setState((s) => ({ ...s, updateMsg: String(e) }));
     } finally {
-      setState({ updateBusy: false });
+      setState((s) => ({ ...s, updateBusy: false }));
     }
   }
 
-  onMount(() => {
+  useEffect(() => {
     refreshPresence();
     loadProvider(state.provider);
     void loadVersion();
     void isAlwaysOnTop()
-      .then((v) => setState({ alwaysOnTop: v }))
+      .then((v) => setState((s) => ({ ...s, alwaysOnTop: v })))
       .catch(() => {});
-  });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  const active = () => PROVIDERS.find((p) => p.id === state.provider)!;
-  const selectedLang = () =>
+  const active = PROVIDERS.find((p) => p.id === state.provider)!;
+  const selectedLang =
     LANGUAGES.find((l) => l.value === prefs.preferences().targetLanguage) ??
     LANGUAGES[0];
 
   return (
-    <div class={cn(["flex flex-col gap-3.5", "font-sans"])}>
+    <div className={cn(["flex flex-col gap-3.5", "font-sans"])}>
       {/* Status header */}
-      <div class={cn(["flex items-center justify-between"])}>
-        <div class={cn(["flex items-center gap-2"])}>
+      <div className={cn(["flex items-center justify-between"])}>
+        <div className={cn(["flex items-center gap-2"])}>
           <Badge variant="success" dot>
             SETTINGS · BYOK
           </Badge>
           <Badge>CONFIG MODE</Badge>
-          {/*<Show
-            when={state.hasStored[state.provider]}
-            fallback={
-              <span
-                class={cn([
-                  "inline-flex items-center gap-1",
-                  "text-[10px] font-semibold",
-                  "text-sub",
-                  "font-mono",
-                ])}
-              >
-                Chưa cấu hình
-              </span>
-            }
-          >
-            <span
-              class={cn([
-                "inline-flex items-center gap-1",
-                "text-[10px] font-semibold",
-                "text-caret-deep",
-                "font-mono",
-              ])}
-            >
-              <Check class="w-3 h-3" />
-              Keychain đã lưu
-            </span>
-          </Show>*/}
         </div>
       </div>
 
       {/* Card 1: Core prefs */}
       <div
-        class={cn([
+        className={cn([
           "p-3.5",
           "rounded-xl",
           "bg-panel border border-main/8",
           "flex flex-col gap-3",
         ])}
       >
-        <div class={cn(["flex items-center justify-between gap-2"])}>
+        <div className={cn(["flex items-center justify-between gap-2"])}>
           <div>
             <span
-              class={cn([
+              className={cn([
                 "block",
                 "text-xs font-bold tracking-tight",
                 "text-main",
@@ -272,94 +226,35 @@ export default function ByokSettingsPanel() {
             >
               Ngôn ngữ đích (Target Language)
             </span>
-            <p class={cn(["text-[11px]", "text-ink"])}>
+            <p className={cn(["text-[11px]", "text-ink"])}>
               Ngôn ngữ mặc định khi tra nhanh
             </p>
           </div>
-          <Select
-            options={LANGUAGES}
-            optionValue="value"
-            optionTextValue="label"
-            value={selectedLang()}
-            onChange={(v) => v && prefs.setTargetLanguage(v.value)}
-            sameWidth={false}
-            gutter={4}
-            itemComponent={(props) => (
-              <Select.Item
-                item={props.item}
-                class={cn([
-                  "flex items-center justify-between",
-                  "px-2.5 py-1.5",
-                  "rounded-md",
-                  "text-xs font-semibold",
-                  "font-mono",
-                  "text-main",
-                  "cursor-pointer outline-none select-none",
-                  "data-[highlighted]:bg-caret/25",
-                  "data-[selected]:bg-caret/30",
-                ])}
-              >
-                <Select.ItemLabel>{props.item.rawValue.label}</Select.ItemLabel>
-                <Select.ItemIndicator>
-                  <Check class="w-3.5 h-3.5 text-caret-deep" />
-                </Select.ItemIndicator>
-              </Select.Item>
-            )}
+          <div
+            className={cn([
+              "inline-flex items-center justify-between gap-2",
+              "min-w-[150px]",
+              "py-1.5 pl-2.5 pr-2",
+              "rounded-lg",
+              "border border-main/12",
+              "bg-bg text-main",
+              "text-xs font-semibold",
+              "font-mono",
+              "opacity-60",
+            ])}
+            aria-label="Target language"
           >
-            <Select.Trigger
-              class={cn([
-                "inline-flex items-center justify-between gap-2",
-                "min-w-[150px]",
-                "py-1.5 pl-2.5 pr-2",
-                "rounded-lg",
-                "border border-main/12",
-                "bg-bg text-main",
-                "text-xs font-semibold",
-                "font-mono",
-                "cursor-pointer",
-                "focus:outline-none focus-visible:ring-1 focus-visible:ring-caret",
-              ])}
-              aria-label="Target language"
-              disabled
-            >
-              <Select.Value<(typeof LANGUAGES)[number]>
-                class={cn(["truncate"])}
-              >
-                {(state) => state.selectedOption().label}
-              </Select.Value>
-              <Select.Icon>
-                <ChevronDown class="w-3.5 h-3.5 text-sub" />
-              </Select.Icon>
-            </Select.Trigger>
-            <Select.Portal>
-              <Select.Content
-                class={cn([
-                  "min-w-[180px]",
-                  "p-1.5",
-                  "rounded-lg",
-                  "bg-bg border border-main/12",
-                  "shadow-lg",
-                  "z-50",
-                ])}
-              >
-                <Select.Listbox
-                  class={cn(["max-h-[220px] overflow-auto", "outline-none"])}
-                />
-              </Select.Content>
-            </Select.Portal>
-          </Select>
+            <span className={cn(["truncate"])}>{selectedLang.label}</span>
+            <ChevronDown className="w-3.5 h-3.5 text-sub" />
+          </div>
         </div>
 
-        <Separator class={cn(["h-px", "bg-main/6", "border-0"])} />
+        <div className={cn(["h-px", "bg-main/6", "border-0"])} />
 
-        <Switch
-          checked={state.alwaysOnTop}
-          onChange={(v) => handleAlwaysOnTop(v)}
-          class={cn(["flex items-center justify-between gap-2"])}
-        >
+        <div className={cn(["flex items-center justify-between gap-2"])}>
           <div>
-            <Switch.Label
-              class={cn([
+            <span
+              className={cn([
                 "block",
                 "text-xs font-bold tracking-tight",
                 "text-main",
@@ -368,42 +263,46 @@ export default function ByokSettingsPanel() {
               ])}
             >
               Luôn nổi trên màn hình (Always on top)
-            </Switch.Label>
-            <p class={cn(["text-[11px]", "text-ink"])}>
+            </span>
+            <p className={cn(["text-[11px]", "text-ink"])}>
               Ghim cửa sổ popup trên tất cả ứng dụng
             </p>
           </div>
-          <Switch.Input class={cn(["sr-only"])} />
-          <Switch.Control
-            class={cn([
+          <button
+            type="button"
+            role="switch"
+            aria-checked={state.alwaysOnTop}
+            onClick={() => handleAlwaysOnTop(!state.alwaysOnTop)}
+            className={cn([
               "relative shrink-0",
               "w-10 h-5",
               "rounded-full",
               "cursor-pointer",
+              "border-0",
               "transition-colors",
               "bg-sub-alt",
-              "data-[checked]:bg-caret",
+              state.alwaysOnTop && "bg-caret",
             ])}
           >
-            <Switch.Thumb
-              class={cn([
+            <span
+              className={cn([
                 "absolute top-[2px] left-[2px]",
                 "block w-4 h-4",
                 "rounded-full",
                 "bg-paper border border-main/15",
                 "transition-transform",
-                "data-[checked]:translate-x-5",
+                state.alwaysOnTop && "translate-x-5",
               ])}
             />
-          </Switch.Control>
-        </Switch>
+          </button>
+        </div>
 
-        <Separator class={cn(["h-px", "bg-main/6", "border-0"])} />
+        <div className={cn(["h-px", "bg-main/6", "border-0"])} />
 
-        <div class={cn(["flex items-center justify-between gap-2"])}>
+        <div className={cn(["flex items-center justify-between gap-2"])}>
           <div>
             <span
-              class={cn([
+              className={cn([
                 "block",
                 "text-xs font-bold tracking-tight",
                 "text-main",
@@ -412,22 +311,21 @@ export default function ByokSettingsPanel() {
               ])}
             >
               Phiên bản (App version){" "}
-              <Show when={state.version}>
-                <span class={cn(["text-sub"])}>v{state.version}</span>
-              </Show>
+              {state.version && state.version !== "loading" && (
+                <span className={cn(["text-sub"])}>v{state.version}</span>
+              )}
             </span>
-            <p class={cn(["text-[11px]", "text-ink"])}>
-              <Show when={state.updateMsg} fallback={"Kiểm tra và cài bản mới"}>
-                {state.updateMsg}
-              </Show>
+            <p className={cn(["text-[11px]", "text-ink"])}>
+              {state.updateMsg || "Kiểm tra và cài bản mới"}
             </p>
           </div>
-          <Button
+          <button
+            type="button"
             onClick={() =>
               state.updateAvailable ? void handleInstall() : void handleCheck()
             }
             disabled={state.updateBusy}
-            class={cn([
+            className={cn([
               "px-3 py-1.5",
               "rounded-lg",
               "bg-caret hover:bg-caret/90 text-main",
@@ -439,24 +337,18 @@ export default function ByokSettingsPanel() {
               "disabled:opacity-50 disabled:cursor-wait",
             ])}
           >
-            <Show
-              when={!state.updateBusy}
-              fallback={"Đang cài..."}
-            >
-              <Show
-                when={state.updateAvailable}
-                fallback={"Kiểm tra cập nhật"}
-              >
-                Cài đặt v{state.latestVersion}
-              </Show>
-            </Show>
-          </Button>
+            {!state.updateBusy
+              ? state.updateAvailable
+                ? `Cài đặt v${state.latestVersion}`
+                : "Kiểm tra cập nhật"
+              : "Đang cài..."}
+          </button>
         </div>
       </div>
 
       {/* Card 2: BYOK */}
       <div
-        class={cn([
+        className={cn([
           "p-3.5",
           "rounded-xl",
           "bg-panel border border-main/8",
@@ -464,16 +356,16 @@ export default function ByokSettingsPanel() {
         ])}
       >
         <div
-          class={cn([
+          className={cn([
             "flex items-center justify-between",
             "pb-2",
             "border-b border-main/6",
           ])}
         >
-          <div class={cn(["flex items-center gap-1.5"])}>
-            <span class={cn(["w-1.5 h-1.5", "rounded-full", "bg-caret"])} />
+          <div className={cn(["flex items-center gap-1.5"])}>
+            <span className={cn(["w-1.5 h-1.5", "rounded-full", "bg-caret"])} />
             <span
-              class={cn([
+              className={cn([
                 "text-xs font-bold tracking-tight uppercase",
                 "text-main",
                 "font-mono",
@@ -483,7 +375,7 @@ export default function ByokSettingsPanel() {
             </span>
           </div>
           <span
-            class={cn([
+            className={cn([
               "px-1.5 py-0.5",
               "rounded",
               "bg-bg text-chip",
@@ -498,7 +390,7 @@ export default function ByokSettingsPanel() {
 
         <div>
           <span
-            class={cn([
+            className={cn([
               "block mb-1.5",
               "text-[11px] font-semibold",
               "text-ink",
@@ -507,18 +399,15 @@ export default function ByokSettingsPanel() {
           >
             Nhà cung cấp AI:
           </span>
-          <ToggleGroup
-            value={state.provider}
-            onChange={(v) => {
-              if (typeof v === "string" && v) selectProvider(v as ByokProviderId);
-            }}
-            class={cn(["grid grid-cols-4 gap-1.5", "font-mono text-xs"])}
-          >
+          <div className={cn(["grid grid-cols-4 gap-1.5", "font-mono text-xs"])}>
             {PROVIDERS.map((p) => (
-              <ToggleGroup.Item
-                value={p.id}
+              <button
+                key={p.id}
+                type="button"
                 aria-label={p.label}
-                class={cn([
+                aria-pressed={p.id === state.provider}
+                onClick={() => selectProvider(p.id)}
+                className={cn([
                   "relative",
                   "py-1 px-2",
                   "rounded-lg",
@@ -527,27 +416,28 @@ export default function ByokSettingsPanel() {
                   "transition-colors cursor-pointer outline-none",
                   "bg-sub-alt text-main font-medium border-main/6 hover:bg-sub-alt/80",
                   "focus-visible:ring-1 focus-visible:ring-caret",
-                  "data-[pressed]:bg-main data-[pressed]:text-bg data-[pressed]:font-bold data-[pressed]:border-main",
+                  p.id === state.provider &&
+                    "bg-main text-bg font-bold border-main",
                 ])}
               >
                 {p.label}
-                <Show when={state.hasStored[p.id]}>
+                {state.hasStored[p.id] && (
                   <span
-                    class={cn([
+                    className={cn([
                       "absolute top-1 right-1",
                       "w-1.5 h-1.5",
                       "rounded-full",
                       "bg-caret",
                     ])}
                   />
-                </Show>
-              </ToggleGroup.Item>
+                )}
+              </button>
             ))}
-          </ToggleGroup>
+          </div>
         </div>
 
         <div
-          class={cn([
+          className={cn([
             "flex items-center justify-between",
             "px-2.5 py-1.5",
             "rounded-lg",
@@ -556,38 +446,34 @@ export default function ByokSettingsPanel() {
             "font-mono",
           ])}
         >
-          <span class={cn(["flex flex-col gap-0.5", "text-ink"])}>
+          <span className={cn(["flex flex-col gap-0.5", "text-ink"])}>
             <span>
-              Text: <strong class={cn(["text-main"])}>{active().models.text}</strong>
-            </span>
-            <span>
-              Ảnh: <strong class={cn(["text-main"])}>{active().models.image}</strong>
+              Text: <strong className={cn(["text-main"])}>{active.models.text}</strong>
             </span>
           </span>
-          <span class={cn(["text-[10px] font-semibold", "text-caret-deep"])}>
-            {active().note}
+          <span className={cn(["text-[10px] font-semibold", "text-caret-deep"])}>
+            {active.note}
           </span>
         </div>
 
-        <TextField
-          value={state.apiKey}
-          onChange={(v) => editKey(v)}
-        >
-          <TextField.Label
-            class={cn([
+        <div>
+          <label
+            className={cn([
               "block mb-1",
               "text-[11px] font-medium",
               "text-ink",
               "font-mono",
             ])}
           >
-            Khóa API {active().label}:
-          </TextField.Label>
-          <div class={cn(["relative", "flex items-center"])}>
-            <TextField.Input
+            Khóa API {active.label}:
+          </label>
+          <div className={cn(["relative", "flex items-center"])}>
+            <input
               type={state.revealed ? "text" : "password"}
-              placeholder={`sk-... (${active().label})`}
-              class={cn([
+              placeholder={`sk-... (${active.label})`}
+              value={state.apiKey}
+              onChange={(e) => editKey(e.target.value)}
+              className={cn([
                 "w-full",
                 "py-2 pl-3 pr-10",
                 "rounded-lg",
@@ -598,77 +484,61 @@ export default function ByokSettingsPanel() {
                 "focus:outline-none focus-visible:ring-1 focus-visible:ring-caret",
               ])}
             />
-            <div class={cn(["absolute right-1.5", "flex items-center gap-1"])}>
-              <Tooltip>
-                <Tooltip.Trigger
-                  as={Button}
-                  onClick={() => toggleRevealed()}
-                  class={cn([
-                    "p-1",
-                    "rounded",
-                    "bg-transparent border-0",
-                    "text-ink hover:text-main",
-                    "transition-colors cursor-pointer",
-                  ])}
-                >
-                  <Show
-                    when={state.revealed}
-                    fallback={<Eye class="w-3.5 h-3.5" />}
-                  >
-                    <EyeOff class="w-3.5 h-3.5" />
-                  </Show>
-                </Tooltip.Trigger>
-                <Tooltip.Portal>
-                  <Tooltip.Content
-                    class={cn([
-                      "px-2 py-1",
-                      "rounded-md",
-                      "bg-main text-bg",
-                      "text-[10px] font-semibold",
-                      "font-mono",
-                      "z-50",
+            <div className={cn(["absolute right-1.5", "flex items-center gap-1"])}>
+              <Tooltip.Provider>
+                <Tooltip.Root>
+                  <Tooltip.Trigger
+                    onClick={() => toggleRevealed()}
+                    className={cn([
+                      "p-1",
+                      "rounded",
+                      "bg-transparent border-0",
+                      "text-ink hover:text-main",
+                      "transition-colors cursor-pointer",
                     ])}
                   >
-                    {state.revealed ? "Ẩn khóa API" : "Hiện khóa API"}
-                  </Tooltip.Content>
-                </Tooltip.Portal>
-              </Tooltip>
-              {/*<Button
-                onClick={() => handleTest()}
-                disabled={state.busy}
-                class={cn([
-                  "px-2 py-1",
-                  "rounded",
-                  "bg-sub-alt hover:bg-sub-alt/80 text-main",
-                  "border border-main/10",
-                  "text-[10px] font-bold",
-                  "font-mono",
-                  "transition-colors cursor-pointer",
-                  "disabled:opacity-50 disabled:cursor-wait",
-                ])}
-              >
-                Test Key
-              </Button>*/}
+                    {state.revealed ? (
+                      <EyeOff className="w-3.5 h-3.5" />
+                    ) : (
+                      <Eye className="w-3.5 h-3.5" />
+                    )}
+                  </Tooltip.Trigger>
+                  <Tooltip.Portal>
+                    <Tooltip.Content
+                      className={cn([
+                        "px-2 py-1",
+                        "rounded-md",
+                        "bg-main text-bg",
+                        "text-[10px] font-semibold",
+                        "font-mono",
+                        "z-50",
+                      ])}
+                    >
+                      {state.revealed ? "Ẩn khóa API" : "Hiện khóa API"}
+                    </Tooltip.Content>
+                  </Tooltip.Portal>
+                </Tooltip.Root>
+              </Tooltip.Provider>
             </div>
           </div>
-        </TextField>
+        </div>
 
-        <Show when={state.status.kind !== "idle"}>
+        {state.status.kind !== "idle" && (
           <div
-            class={cn([
+            className={cn([
               "flex items-center justify-between",
               "text-[11px] font-semibold",
               "font-mono",
             ])}
           >
             <div
-              class={cn([
+              className={cn([
                 "inline-flex items-center gap-1.5",
                 state.status.kind === "ok" ? "text-caret-deep" : "text-error",
               ])}
             >
               <span
-                class={cn([
+                className={cn([
                   "w-2 h-2",
                   "rounded-full",
                   state.status.kind === "ok" ? "bg-caret animate-pulse" : "bg-error",
@@ -677,32 +547,18 @@ export default function ByokSettingsPanel() {
               {state.status.msg}
             </div>
           </div>
-        </Show>
+        )}
       </div>
 
       {/* Footer */}
       <div
-        class={cn(["flex items-center justify-end gap-2", "font-mono text-xs"])}
+        className={cn(["flex items-center justify-end gap-2", "font-mono text-xs"])}
       >
-        {/*<Button
-          onClick={handleReset}
-          disabled={state.busy}
-          class={cn([
-            "px-2.5 py-1",
-            "rounded-lg",
-            "bg-transparent border-0",
-            "text-ink hover:text-main hover:bg-black/5",
-            "text-[11px] font-bold tracking-wide",
-            "transition-colors cursor-pointer",
-            "disabled:opacity-50",
-          ])}
-        >
-          Khôi phục mặc định
-        </Button>*/}
-        <Button
+        <button
+          type="button"
           onClick={() => handleSave()}
-          disabled={state.busy || !dirty()}
-          class={cn([
+          disabled={state.busy || !dirty}
+          className={cn([
             "px-3.5 py-1.5",
             "rounded-lg",
             "bg-caret hover:bg-caret/90 text-main",
@@ -713,9 +569,9 @@ export default function ByokSettingsPanel() {
             "disabled:opacity-50 disabled:cursor-not-allowed",
           ])}
         >
-          <Check class="w-3.5 h-3.5" />
+          <Check className="w-3.5 h-3.5" />
           Lưu cấu hình
-        </Button>
+        </button>
       </div>
     </div>
   );

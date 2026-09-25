@@ -32,6 +32,8 @@ export const FALLBACK_CLIPBOARD_IMAGE_ERROR =
   "Failed to read or translate clipboard image";
 export const FALLBACK_UPLOAD_ERROR =
   "Failed to read or translate uploaded image";
+export const OCR_UNREADABLE_ERROR =
+  "Ảnh mờ / không đọc được chữ, thử ảnh rõ nét hơn";
 
 export const MANUAL_INPUT_PLACEHOLDER = "Type or paste text to translate…";
 
@@ -53,7 +55,6 @@ export interface ByokProvider {
   label: string;
   models: {
     text: string;
-    image: string;
   };
   note: string;
 }
@@ -62,15 +63,15 @@ export const BYOK_PROVIDERS: readonly ByokProvider[] = [
   {
     id: "groq",
     label: "Groq",
-    models: { text: "openai/gpt-oss-120b", image: "qwen/qwen3.8-27b" },
+    models: { text: "openai/gpt-oss-120b" },
     note: "",
   },
-  {
-    id: "openrouter",
-    label: "OpenRouter",
-    models: { text: "qwen/qwen-3-32b", image: "qwen/qwen2.5-vl-32b-instruct" },
-    note: "",
-  },
+  // {
+  //   id: "openrouter",
+  //   label: "OpenRouter",
+  //   models: { text: "qwen/qwen-3-32b" },
+  //   note: "",
+  // },
 ];
 
 export const DEFAULT_BYOK_PROVIDER: ByokProviderId = "groq";
