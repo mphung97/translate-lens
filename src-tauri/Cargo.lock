@@ -4644,7 +4644,7 @@ dependencies = [
 
 [[package]]
 name = "translate-lens-v2"
-version = "1.0.0"
+version = "2.0.0"
 dependencies = [
  "keyring",
  "serde",
