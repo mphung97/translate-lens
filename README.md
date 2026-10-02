@@ -9,7 +9,7 @@
 Clipboard-first OCR + text translation in a 500px popup. Bring your own key. No server. No tracking.
 
 ![Tauri v2](https://img.shields.io/badge/Tauri-v2-ffc131?style=flat-square&logo=tauri)
-![SolidJS](https://img.shields.io/badge/SolidJS-1.9-2c4f7c?style=flat-square&logo=solid)
+![React](https://img.shields.io/badge/React-19-61dafb?style=flat-square&logo=react)
 ![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6?style=flat-square&logo=typescript)
 ![Tailwind v4](https://img.shields.io/badge/Tailwind-v4-06b6d4?style=flat-square&logo=tailwindcss)
 ![pnpm](https://img.shields.io/badge/pnpm-11-f69220?style=flat-square&logo=pnpm)
@@ -130,13 +130,13 @@ translate-lens/
 
 ## 🧰 Tech Stack
 
-- **Frontend:** SolidJS + TypeScript (strict) + Tailwind CSS v4 + Vite + Kobalte UI + lucide-solid
+- **Frontend:** React 19 (Compiler) + TypeScript (strict) + Tailwind CSS v4 + Vite 8 + TanStack Router + zustand + Radix UI + lucide-react
 - **Backend:** Rust + Tauri v2 (clipboard-manager, fs, opener, os, process, updater, single-instance)
 - **AI:** Vercel `ai` SDK + `@ai-sdk/groq` + `@openrouter/ai-sdk-provider`, Zod structured output
 - **Fonts:** JetBrains Mono + Space Grotesk
 - **Package manager:** pnpm
 
-State rules: 3+ related signals → one colocated `createStore`; components never call `invoke` directly (side effects live in store actions or `src/lib/`); context only when 2+ components share state.
+State rules: 3+ related fields → one colocated `useState` object; components never call `invoke` directly (side effects live in store actions or `src/lib/`); zustand only when 2+ components share state. No manual `useMemo`/`useCallback` — React Compiler handles memoization.
 
 ## 🔒 Privacy
 

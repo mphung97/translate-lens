@@ -1,6 +1,6 @@
 # AGENTS.md
 
-Translate Lens is a Tauri v2 desktop app (SolidJS + Rust) that translates text or images from the clipboard or user input.
+Translate Lens is a Tauri v2 desktop app (React + Rust) that translates text or images from the clipboard or user input.
 
 ## Setup commands
 
@@ -13,7 +13,7 @@ Translate Lens is a Tauri v2 desktop app (SolidJS + Rust) that translates text o
 
 ## Tech stack
 
-- Frontend: SolidJS + TypeScript + Tailwind CSS v4 + Vite
+- Frontend: React 19 + TypeScript + Tailwind CSS v4 + Vite 8 (React Compiler via `reactCompilerPreset`)
 - Backend: Rust + Tauri v2
 - Fonts: JetBrains Mono (mono), Space Grotesk (sans)
 - Package manager: pnpm
@@ -23,7 +23,7 @@ Translate Lens is a Tauri v2 desktop app (SolidJS + Rust) that translates text o
 - TypeScript strict mode enabled
 - Use Tailwind utility classes for styling
 - Theme colors via CSS custom properties (--color-bg, --color-main, --color-caret, etc.)
-- Icons from lucide-solid
+- Icons from lucide-react
 - Follow existing component patterns in src/components/
 
 ### Tailwind class order
@@ -31,7 +31,7 @@ Translate Lens is a Tauri v2 desktop app (SolidJS + Rust) that translates text o
 Always sort and group Tailwind classes using `cn([...])` with one array element per category. Each element groups related classes of the same category. Empty categories are skipped.
 
 ```tsx
-<div class={cn([
+<div className={cn([
   "flex items-center",              // Layout / Flexbox
   "p-4 gap-2",                      // Spacing
   "bg-main rounded-lg",             // Backgrounds + Borders
@@ -61,19 +61,19 @@ Category ordering (priority 1-14):
 
 ## Project structure
 
-- `src/` - SolidJS frontend (App.tsx, components/Popup.tsx)
+- `src/` - React frontend (App.tsx, components/Popup.tsx)
 - `src-tauri/` - Rust backend (lib.rs, main.rs)
 - `mockup/` - Design reference HTML (Monkeytype 9009 theme)
 
 ## State management
 
-- When a component owns 3+ related signals plus their async handlers, group them into one `createStore` object (`solid-js/store`) colocated at the top of the component file (see the `ByokState` store in `src/components/ByokSettingsPanel.tsx`). State stays in the store; expose named actions (`select…`, `save`, `test`, `clear…`, `init`) beside it.
+- When a component owns 3+ related state fields plus their async handlers, group them into one `useState` object colocated at the top of the component file (see the `ByokState` interface in `src/components/ByokSettingsPanel.tsx`). State stays in the hook; expose named actions (`select…`, `save`, `test`, `clear…`, `init`) beside it.
 - Components never touch `invoke`/IPC directly — all side effects live in store actions or `src/lib/`.
-- Use context (`PreferencesProvider` pattern in `src/stores/preferences.tsx`) only when 2+ components share the state; single-consumer state stays colocated, no `src/stores/` file.
+- Use zustand (`usePreferencesStore` / `useTranslationStore` in `src/stores/`) only when 2+ components share the state; single-consumer state stays colocated, no `src/stores/` file. No manual `useMemo`/`useCallback` — React Compiler handles memoization.
 
 ## Testing
 
-- No test framework configured yet
+- Vitest + Testing Library (`pnpm vitest run`)
 - TypeScript type checking: ensure no type errors
 - Rust: `cargo clippy` and `cargo check` from src-tauri/
 
@@ -81,6 +81,7 @@ Category ordering (priority 1-14):
 
 - **i-have-adhd**: Load for all AI output formatting. Shape output for ADHD readers: lead with next action, number multi-step work, restate state, suppress tangents, give time estimates, make wins visible.
 - **karpathy-guidelines**: Load for all coding tasks. Think before coding, simplify first, make surgical changes, define verifiable success criteria.
+- **dont-use-use-effect** (`.opencode/skills/dont-use-use-effect/SKILL.md`): Load when writing or reviewing React components. Derive during render, handle events in handlers, subscribe via `useSyncExternalStore`/zustand selectors. `useEffect` only for external-system sync.
 
 ## PR instructions
 

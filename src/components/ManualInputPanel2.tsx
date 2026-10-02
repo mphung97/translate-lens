@@ -1,14 +1,11 @@
-import { Show } from "solid-js";
-import { useNavigate } from "@solidjs/router";
-import { createStore } from "solid-js/store";
-import * as Switch from "@kobalte/core/switch";
+import { useState } from "react";
+import { useNavigate } from "@tanstack/react-router";
 import {
   ClipboardPaste,
   X,
   ChevronRight,
   RotateCcw,
-  Settings2,
-} from "lucide-solid";
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { resolveCredentials, translate, TranslateError } from "@/lib/translate";
 import { usePreferences } from "@/stores/preferences";
@@ -33,7 +30,7 @@ export default function ManualInputPanel() {
   const prefs = usePreferences();
   const t = useTranslation();
   const navigate = useNavigate();
-  const [state, setState] = createStore<ManualInputState>({
+  const [state, setState] = useState<ManualInputState>({
     input: "",
     showPinyin: true,
     showRuby: false,
@@ -41,15 +38,15 @@ export default function ManualInputPanel() {
     error: "",
   });
 
-  const charCount = () => state.input.length;
+  const charCount = state.input.length;
   const maxChars = MAX_INPUT_CHARS;
 
   function editInput(v: string) {
-    setState({ input: v, error: "" });
+    setState((s) => ({ ...s, input: v, error: "" }));
   }
 
   function clearInput() {
-    setState({ input: "", error: "" });
+    setState((s) => ({ ...s, input: "", error: "" }));
   }
 
   async function pasteFromClipboard() {
@@ -65,14 +62,14 @@ export default function ManualInputPanel() {
       }
       if (text) editInput(state.input + text);
     } catch {
-      setState({ error: "Không đọc được nội dung clipboard" });
+      setState((s) => ({ ...s, error: "Không đọc được nội dung clipboard" }));
     }
   }
 
   async function submit() {
     const text = state.input.trim();
     if (!text || state.busy) return;
-    setState({ busy: true, error: "" });
+    setState((s) => ({ ...s, busy: true, error: "" }));
     try {
       const provider = prefs.preferences().byokProvider;
       const { apiKey } = resolveCredentials(prefs.apiKeys(), provider);
@@ -83,20 +80,21 @@ export default function ManualInputPanel() {
         apiKey,
       });
       t.setTranslationResult(result, "paste");
-      navigate(ROUTES.result);
+      navigate({ to: ROUTES.result });
     } catch (e) {
-      setState({
+      setState((s) => ({
+        ...s,
         error:
           e instanceof TranslateError ? e.message : FALLBACK_TRANSLATE_ERROR,
-      });
+      }));
     } finally {
-      setState({ busy: false });
+      setState((s) => ({ ...s, busy: false }));
     }
   }
 
   return (
     <div
-      class={cn([
+      className={cn([
         "relative", // Layout
         "flex flex-col", // Flexbox
         "bg-bg", // Backgrounds
@@ -104,13 +102,13 @@ export default function ManualInputPanel() {
     >
       {/* Status Row */}
       <div
-        class={cn([
+        className={cn([
           "flex items-center justify-between", // Flexbox
           "mb-3", // Spacing
         ])}
       >
         <div
-          class={cn([
+          className={cn([
             "flex items-center gap-[6px]", // Flexbox + Spacing
           ])}
         >
@@ -120,7 +118,7 @@ export default function ManualInputPanel() {
           <Badge>Auto Detect ZH</Badge>
           <Badge>
             ZH
-            <ChevronRight class="w-2 h-2" />
+            <ChevronRight className="w-2 h-2" />
             VI
           </Badge>
         </div>
@@ -128,7 +126,7 @@ export default function ManualInputPanel() {
 
       {/* Input Panel */}
       <div
-        class={cn([
+        className={cn([
           "relative", // Layout
           "bg-panel border border-main/10", // Backgrounds + Borders
           "rounded-[12px]", // Borders
@@ -137,12 +135,12 @@ export default function ManualInputPanel() {
         ])}
       >
         <div
-          class={cn([
+          className={cn([
             "min-h-[126px]", // Sizing
           ])}
         >
           <textarea
-            class={cn([
+            className={cn([
               "w-full h-full", // Sizing
               "border-0 bg-transparent", // Borders + Backgrounds
               "font-mono text-[14px] leading-[1.7]", // Typography
@@ -154,36 +152,37 @@ export default function ManualInputPanel() {
               "Nhập chữ Hán, câu từ hoặc dán đoạn văn bản cần dịch tại đây...\nVí dụ: 学而时习之，不亦说乎？"
             }
             value={state.input}
-            onInput={(e) => editInput(e.currentTarget.value)}
+            onChange={(e) => editInput(e.target.value)}
             rows={TEXTAREA_ROWS}
           />
         </div>
 
         {/* Input Tools */}
         <div
-          class={cn([
+          className={cn([
             "flex items-center justify-between", // Flexbox
             "pt-[10px] mt-[6px]", // Spacing
             "border-t border-dashed border-main/10", // Borders
           ])}
         >
           <span
-            class={cn([
+            className={cn([
               "text-[10px] font-medium", // Typography
               "text-ink tracking-[.02em]", // Typography (color)
             ])}
           >
-            {charCount().toLocaleString()} / {maxChars.toLocaleString()} ký tự
+            {charCount.toLocaleString()} / {maxChars.toLocaleString()} ký tự
           </span>
 
           <div
-            class={cn([
+            className={cn([
               "flex items-center gap-[6px]", // Flexbox + Spacing
             ])}
           >
             <button
+              type="button"
               onClick={pasteFromClipboard}
-              class={cn([
+              className={cn([
                 "font-mono text-[10px] font-medium", // Typography
                 "text-ink", // Typography (color)
                 "bg-main/5", // Backgrounds
@@ -197,12 +196,13 @@ export default function ManualInputPanel() {
               ])}
               title="Paste from Clipboard (⌘V)"
             >
-              <ClipboardPaste class="w-[11px] h-[11px]" />
+              <ClipboardPaste className="w-[11px] h-[11px]" />
               Dán nhanh
             </button>
             <button
+              type="button"
               onClick={clearInput}
-              class={cn([
+              className={cn([
                 "font-mono text-[10px] font-medium", // Typography
                 "text-ink", // Typography (color)
                 "bg-main/5", // Backgrounds
@@ -216,97 +216,17 @@ export default function ManualInputPanel() {
               ])}
               title="Clear"
             >
-              <X class="w-[11px] h-[11px]" />
+              <X className="w-[11px] h-[11px]" />
               Xóa
             </button>
           </div>
         </div>
       </div>
 
-      {/* Options Drawer */}
-      {/*<div
-        class={cn([
-          "mt-3", // Spacing
-          "bg-main/[.02] border border-main/6", // Backgrounds + Borders
-          "rounded-[10px]", // Borders
-          "px-[12px] py-[10px]", // Spacing
-          "flex items-center justify-between", // Flexbox
-        ])}
-      >
-        <div class="flex items-center gap-2">
-          <Settings2 class="w-[12px] h-[12px] text-ink" />
-          <span class="font-mono text-[10.5px] font-medium text-ink">
-            Tùy chọn
-          </span>
-        </div>
-
-        <div class="flex items-center gap-4">
-          <Switch.Root
-            class="flex items-center gap-2 cursor-pointer"
-            checked={showPinyin()}
-            onChange={setShowPinyin}
-          >
-            <Switch.Label class="font-mono text-[10.5px] font-medium text-ink">
-              Pinyin
-            </Switch.Label>
-            <Switch.Control
-              class={cn([
-                "w-[30px] h-[17px]", // Sizing
-                "rounded-full", // Borders
-                "relative", // Layout
-                "transition-colors", // Transitions
-                showPinyin() ? "bg-caret" : "bg-sub-alt",
-              ])}
-            >
-              <Switch.Thumb
-                class={cn([
-                  "absolute top-[2px] w-[13px] h-[13px]", // Positioning + Sizing
-                  "rounded-full", // Borders
-                  "bg-white", // Backgrounds
-                  "shadow-[0_1px_2px_rgba(0,0,0,.2)]", // Effects
-                  "transition-[left]", // Transitions
-                  showPinyin() ? "left-[15px]" : "left-[2px]",
-                ])}
-              />
-            </Switch.Control>
-          </Switch.Root>
-
-          <Switch.Root
-            class="flex items-center gap-2 cursor-pointer"
-            checked={showRuby()}
-            onChange={setShowRuby}
-          >
-            <Switch.Label class="font-mono text-[10.5px] font-medium text-ink">
-              Ruby
-            </Switch.Label>
-            <Switch.Control
-              class={cn([
-                "w-[30px] h-[17px]", // Sizing
-                "rounded-full", // Borders
-                "relative", // Layout
-                "transition-colors", // Transitions
-                showRuby() ? "bg-caret" : "bg-sub-alt",
-              ])}
-            >
-              <Switch.Thumb
-                class={cn([
-                  "absolute top-[2px] w-[13px] h-[13px]", // Positioning + Sizing
-                  "rounded-full", // Borders
-                  "bg-white", // Backgrounds
-                  "shadow-[0_1px_2px_rgba(0,0,0,.2)]", // Effects
-                  "transition-[left]", // Transitions
-                  showRuby() ? "left-[15px]" : "left-[2px]",
-                ])}
-              />
-            </Switch.Control>
-          </Switch.Root>
-        </div>
-      </div>*/}
-
       {/* Action Footer */}
-      <Show when={state.error}>
+      {state.error && (
         <div
-          class={cn([
+          className={cn([
             "mt-3",
             "px-3 py-2",
             "text-[10px] leading-[1.5]",
@@ -316,32 +236,21 @@ export default function ManualInputPanel() {
         >
           {state.error}
         </div>
-      </Show>
+      )}
       <div
-        class={cn([
+        className={cn([
           "flex items-center justify-between", // Flexbox
           "mt-[14px]", // Spacing
         ])}
       >
         <div
-          class={cn([
+          className={cn([
             "flex items-center gap-[5px]", // Flexbox + Spacing
             "font-mono text-[10px] text-ink", // Typography
           ])}
         >
-          {/*<span
-            class={cn([
-              "bg-sub-alt rounded-[4px]", // Backgrounds + Borders
-              "px-[6px] py-[2px]", // Spacing
-              "text-[9px] font-semibold text-chip", // Typography
-            ])}
-          >
-            Esc
-          </span>
-          <span>đóng</span>
-          <span class="opacity-40 mx-1">·</span>*/}
           <span
-            class={cn([
+            className={cn([
               "bg-sub-alt rounded-[4px]", // Backgrounds + Borders
               "px-[6px] py-[2px]", // Spacing
               "text-[9px] font-semibold text-chip", // Typography
@@ -351,7 +260,7 @@ export default function ManualInputPanel() {
           </span>
           <span>+</span>
           <span
-            class={cn([
+            className={cn([
               "bg-sub-alt rounded-[4px]", // Backgrounds + Borders
               "px-[6px] py-[2px]", // Spacing
               "text-[9px] font-semibold text-chip", // Typography
@@ -363,14 +272,15 @@ export default function ManualInputPanel() {
         </div>
 
         <div
-          class={cn([
+          className={cn([
             "flex items-center gap-2", // Flexbox + Spacing
           ])}
         >
           <button
+            type="button"
             onClick={submit}
             disabled={state.busy}
-            class={cn([
+            className={cn([
               "h-[33px] px-[14px]", // Sizing + Spacing
               "rounded-[9px]", // Borders
               "font-mono text-[10.5px] font-bold tracking-[.08em] uppercase", // Typography
@@ -383,7 +293,7 @@ export default function ManualInputPanel() {
               "disabled:opacity-50 disabled:cursor-wait", // Disabled
             ])}
           >
-            <RotateCcw class="w-[13px] h-[13px]" />
+            <RotateCcw className="w-[13px] h-[13px]" />
             {state.busy ? "Đang dịch…" : "Dịch ngay"}
           </button>
         </div>

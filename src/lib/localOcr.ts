@@ -55,8 +55,10 @@ let status: LocalOcrStatus = "idle";
 let lastError = "";
 let readyPromise: Promise<OcrInstance | null> | null = null;
 const listeners = new Set<(p: LocalOcrProgress) => void>();
+let lastProgress: LocalOcrProgress = { fraction: 0, stage: "Loading local OCR…" };
 
 function emit(p: LocalOcrProgress) {
+  lastProgress = p;
   for (const cb of listeners) {
     try {
       cb(p);
@@ -71,6 +73,11 @@ export function onOcrProgress(cb: (p: LocalOcrProgress) => void): () => void {
   return () => {
     listeners.delete(cb);
   };
+}
+
+/** Snapshot getter for `useSyncExternalStore` subscriptions. */
+export function getOcrProgress(): LocalOcrProgress {
+  return lastProgress;
 }
 
 export function ocrStatus(): LocalOcrStatus {
