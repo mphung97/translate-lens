@@ -5,6 +5,7 @@ import { ROUTES } from "@/constants";
 import { useTranslation } from "@/stores/translation";
 import Badge from "./Badge";
 import CopyButton from "./CopyButton";
+import OcrTextPanel from "./OcrTextPanel";
 
 function FieldCard(props: {
   label: string;
@@ -76,6 +77,9 @@ export default function ResultPanel() {
       </div>
 
       <div className={cn(["flex flex-col gap-2.5"])}>
+        {translation.ocrBoxes && translation.ocrBoxes.length > 0 && (
+          <OcrTextPanel boxes={translation.ocrBoxes} />
+        )}
         <FieldCard
           label="Original"
           sub="中文"

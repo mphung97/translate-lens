@@ -35,7 +35,7 @@ export default function Toolbar() {
           "relative", // Layout
           "bg-panel", // Backgrounds
           "rounded-[10px]", // Borders
-          "shadow-sm",
+          // "shadow-sm",
         ])}
       >
         <div

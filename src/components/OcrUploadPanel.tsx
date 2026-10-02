@@ -7,6 +7,7 @@ import type { PreparedImage } from "@/lib/image";
 import { resolveCredentials, translate, TranslateError } from "@/lib/translate";
 import type { TranslateResult } from "@/lib/translate";
 import { recognizeLocal } from "@/lib/localOcr";
+import type { LocalOcrBox } from "@/lib/localOcr";
 import { usePreferences } from "@/stores/preferences";
 import { useTranslation } from "@/stores/translation";
 import { cn } from "@/lib/utils";
@@ -30,32 +31,30 @@ export default function OcrUploadPanel() {
   const [dragging, setDragging] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
 
-  async function runOcrTranslate(prepared: PreparedImage): Promise<{
-    result: TranslateResult;
+  async function runOcr(prepared: PreparedImage): Promise<{
+    text: string;
     ocrScore: number;
+    boxes: LocalOcrBox[];
   }> {
-    const provider = prefs.preferences().byokProvider;
-    const { apiKey } = resolveCredentials(prefs.apiKeys(), provider);
-    const targetLanguage = prefs.preferences().targetLanguage;
-
     // Local-only OCR (awaits init when the user clicks before ready).
     // Weak or empty recognition blocks with an error.
     const local = await recognizeLocal(prepared.bytes, prepared.mediaType);
-    console.info("[ocr]", {
-      avgScore: local.avgScore,
-      minScore: local.minScore,
-      lineCount: local.lineCount,
-    });
     if (!local.text.trim() || local.avgScore < OCR_MIN_SCORE) {
       throw new TranslateError(OCR_UNREADABLE_ERROR, "INVALID_RESPONSE");
     }
-    const result = await translate({
-      text: local.text,
+    return { text: local.text, ocrScore: local.avgScore, boxes: local.boxes };
+  }
+
+  async function runTranslate(text: string): Promise<TranslateResult> {
+    const provider = prefs.preferences().byokProvider;
+    const { apiKey } = resolveCredentials(prefs.apiKeys(), provider);
+    const targetLanguage = prefs.preferences().targetLanguage;
+    return translate({
+      text,
       targetLanguage,
       provider,
       apiKey,
     });
-    return { result, ocrScore: local.avgScore };
   }
 
   async function runAndNavigate(
@@ -67,8 +66,9 @@ export default function OcrUploadPanel() {
     setError("");
     try {
       const prepared = await getPrepared();
-      const { result, ocrScore } = await runOcrTranslate(prepared);
-      t.setTranslationResult(result, "upload", ocrScore);
+      const { text, ocrScore, boxes } = await runOcr(prepared);
+      const result = await runTranslate(text);
+      t.setTranslationResult(result, "upload", ocrScore, boxes);
       navigate({ to: ROUTES.result });
     } catch (e) {
       setError(e instanceof TranslateError ? e.message : fallbackMsg);
