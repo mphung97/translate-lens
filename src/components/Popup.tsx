@@ -3,8 +3,10 @@ import { useRouterState } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
 import { MAX_WINDOW_HEIGHT } from "@/constants";
 import { resizeWindow, setupAutoResize } from "@/lib/resizeWindow";
+import { USE_CUSTOM_WINDOW_CONTROLS } from "@/lib/platform";
 import Toolbar from "./Toolbar";
 import Splash from "./Splash";
+import { WindowControls } from "./WindowControls";
 
 export type Mode = "upload" | "paste" | "settings";
 
@@ -38,10 +40,13 @@ export default function Popup(props: { children: ReactNode }) {
         "p-2 pt-10", // Spacing
       ])}
     >
-      <div
-        className="absolute top-0 left-0 w-full h-10 bg-[linear-gradient(to_right,#EF9393,#E17DC2,#998EE0,#43ADD0,#8BDEDA)]"
-        data-tauri-drag-region="true"
-      />
+      <div className="flex items-center h-10 absolute top-0 left-0 right-0">
+        <div
+          className="flex-1 h-full bg-[linear-gradient(to_right,#EF9393,#E17DC2,#998EE0,#43ADD0,#8BDEDA)]"
+          data-tauri-drag-region="true"
+        />
+        {USE_CUSTOM_WINDOW_CONTROLS && <WindowControls />}
+      </div>
       <div
         className={cn([
           "relative", // Layout
