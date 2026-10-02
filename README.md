@@ -16,11 +16,21 @@ Clipboard-first OCR + text translation in a 500px popup. Bring your own key. No 
 ![License: MIT](https://img.shields.io/badge/License-MIT-green?style=flat-square)
 ![Platform](https://img.shields.io/badge/macOS_%7C_Windows_%7C_Linux-supported-blue?style=flat-square)
 
-[Features](#-features) · [Quickstart](#-quickstart-5-minutes) · [BYOK Setup](#-byok-setup) · [How It Works](#-how-it-works) · [Stack](#-tech-stack)
+[Features](#-features) · [Screenshots](#-screenshots) · [Quickstart](#-quickstart-5-minutes) · [BYOK Setup](#-byok-setup) · [How It Works](#-how-it-works) · [Stack](#-tech-stack)
 
 </div>
 
 ---
+
+## 🖥️ Screenshots
+
+| 📸 Upload — drag & drop / clipboard OCR | ⌨️ Manual — type or paste text |
+|:---:|:---:|
+| ![Upload mode](assets/upload.png) | ![Manual input](assets/input.png) |
+
+| ✅ Result — original · translation · pinyin | ⚙️ Settings — BYOK keys, language, updates |
+|:---:|:---:|
+| ![Translation result](assets/result.png) | ![BYOK settings](assets/settings.png) |
 
 ## ✨ Features
 
@@ -166,4 +176,4 @@ PRs welcome. Match existing Tailwind `cn([...])` grouping + colocated-store patt
 
 ## 📄 License
 
-MIT — see [LICENSE](LICENSE) *(add file if missing)*.
+MIT — see [LICENSE](LICENSE).
